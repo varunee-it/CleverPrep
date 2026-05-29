@@ -5,7 +5,12 @@ import{
     generateSummary,
     chat,
     explainConcept,
-    getChatHistory
+    getChatHistory,
+    getConversations,
+    deleteConversation,
+    clearConversation,
+    renameConversation,
+    shareConversation
 } from '../controllers/aiController.js'
 import protect from '../middleware/auth.js';
 
@@ -17,5 +22,13 @@ router.post('/generate-quiz',generateQuiz);
 router.post('/generate-summary',generateSummary);
 router.post('/chat',chat);
 router.post('/explain-concept',explainConcept);
-router.get('/get-chat-history',getChatHistory);
+
+// Conversation management
+router.get('/conversations/:documentId', getConversations);
+router.get('/chat-history/:conversationId', getChatHistory); 
+router.delete('/conversations/:conversationId', deleteConversation);
+router.post('/conversations/:conversationId/clear', clearConversation);
+router.put('/conversations/:conversationId/rename', renameConversation);
+router.post('/conversations/:conversationId/share', shareConversation);
+
 export default router;

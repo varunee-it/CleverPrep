@@ -11,6 +11,22 @@ const chathistorySchema = new mongoose.Schema({
         ref: "Document",
         required: true,
     },
+    title: {
+        type: String,
+        default: "New Conversation"
+    },
+    isPublic: {
+        type: Boolean,
+        default: false
+    },
+    shareId: {
+        type: String,
+        default: null
+    },
+    memorySummary: {
+        type: String,
+        default: ""
+    },
     messages: [{
         role: {
             type: String,

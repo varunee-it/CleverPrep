@@ -5,6 +5,7 @@ import ChatHistory from "../models/ChatHistory.js";
 
 import * as geminiService from "../utils/geminiService.js";
 import { findRelevantChunks } from "../utils/textChunker.js";
+import crypto from 'crypto';
 
 /* ================= GENERATE FLASHCARDS ================= */
 
@@ -164,7 +165,7 @@ export const generateSummary = async (req, res, next) => {
 
 export const chat = async (req, res, next) => {
   try {
-    const { documentId, question } = req.body;
+    const { documentId, question, conversationId } = req.body;
 
     if (!documentId || !question) {
       return res.status(400).json({
@@ -198,22 +199,36 @@ export const chat = async (req, res, next) => {
       (chunk) => chunk.chunkIndex
     );
 
-    let history = await ChatHistory.findOne({
-      userId: req.user._id,
-      documentId: document._id,
-    });
-
-    if (!history) {
+    let history;
+    if (conversationId) {
+      history = await ChatHistory.findOne({
+        _id: conversationId,
+        userId: req.user._id,
+      });
+      if (!history) {
+        return res.status(404).json({
+          success: false,
+          error: "Conversation not found",
+        });
+      }
+    } else {
+      // Auto-generate title from first prompt
+      const title = question.length > 40 ? question.substring(0, 37) + '...' : question;
       history = await ChatHistory.create({
         userId: req.user._id,
         documentId: document._id,
+        title,
         messages: [],
       });
     }
 
+    const recentMessages = history.messages.slice(-15);
+
     const answer = await geminiService.chatWithContext(
       question,
-      relevantChunks
+      relevantChunks,
+      recentMessages,
+      history.memorySummary
     );
 
     history.messages.push(
@@ -231,7 +246,18 @@ export const chat = async (req, res, next) => {
       }
     );
 
-    await history.save();
+    // Context Optimization Summarization (Background)
+    if (history.messages.length > 20 && history.messages.length % 20 === 0) {
+      const messagesToSummarize = history.messages.slice(0, -10); // exclude latest 10
+      geminiService.summarizeMemory(history.memorySummary, messagesToSummarize)
+        .then(async (newSummary) => {
+          history.memorySummary = newSummary;
+          await history.save();
+        })
+        .catch(err => console.error("Memory summary failed:", err));
+    } else {
+      await history.save();
+    }
 
     return res.status(200).json({
       success: true,
@@ -240,6 +266,7 @@ export const chat = async (req, res, next) => {
         answer,
         relevantChunks: chunkIndices,
         chatHistoryId: history._id,
+        title: history.title
       },
       message: "Response generated successfully",
     });
@@ -311,20 +338,20 @@ export const explainConcept = async (req, res, next) => {
 
 export const getChatHistory = async (req, res, next) => {
   try {
-    const { documentId } = req.params;
+    const { conversationId } = req.params;
 
-    if (!documentId) {
+    if (!conversationId) {
       return res.status(400).json({
         success: false,
-        error: "Document ID is required",
+        error: "Conversation ID is required",
         statusCode: 400,
       });
     }
 
     const history = await ChatHistory.findOne({
+      _id: conversationId,
       userId: req.user._id,
-      documentId,
-    }).select("messages");
+    }).select("messages title");
 
     if (!history) {
       return res.status(200).json({
@@ -338,6 +365,178 @@ export const getChatHistory = async (req, res, next) => {
       success: true,
       data: history.messages,
       message: "Chat history retrieved successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/* ================= CONVERSATION MANAGEMENT ================= */
+
+export const getConversations = async (req, res, next) => {
+  try {
+    const { documentId } = req.params;
+    
+    if (!documentId) {
+      return res.status(400).json({
+        success: false,
+        error: "Document ID is required",
+        statusCode: 400,
+      });
+    }
+
+    const conversations = await ChatHistory.find({
+      userId: req.user._id,
+      documentId,
+    })
+    .select("_id title updatedAt")
+    .sort({ updatedAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      data: conversations,
+      message: "Conversations retrieved successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteConversation = async (req, res, next) => {
+  try {
+    const { conversationId } = req.params;
+    
+    const history = await ChatHistory.findOneAndDelete({
+      _id: conversationId,
+      userId: req.user._id,
+    });
+
+    if (!history) {
+      return res.status(404).json({
+        success: false,
+        error: "Conversation not found",
+        statusCode: 404,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {},
+      message: "Conversation deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const clearConversation = async (req, res, next) => {
+  try {
+    const { conversationId } = req.params;
+
+    const history = await ChatHistory.findOne({
+      _id: conversationId,
+      userId: req.user._id,
+    });
+
+    if (!history) {
+      return res.status(404).json({
+        success: false,
+        error: "Conversation not found",
+        statusCode: 404,
+      });
+    }
+
+    history.messages = [];
+    history.memorySummary = "";
+    await history.save();
+
+    return res.status(200).json({
+      success: true,
+      data: [],
+      message: "Conversation cleared successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const renameConversation = async (req, res, next) => {
+  try {
+    const { conversationId } = req.params;
+    const { title } = req.body;
+
+    if (!title) {
+      return res.status(400).json({
+        success: false,
+        error: "Title is required"
+      });
+    }
+
+    const history = await ChatHistory.findOneAndUpdate(
+      { _id: conversationId, userId: req.user._id },
+      { title },
+      { new: true }
+    );
+
+    if (!history) {
+      return res.status(404).json({ success: false, error: "Conversation not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: history,
+      message: "Conversation renamed"
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const shareConversation = async (req, res, next) => {
+  try {
+    const { conversationId } = req.params;
+    
+    let history = await ChatHistory.findOne({ _id: conversationId, userId: req.user._id });
+    
+    if (!history) {
+      return res.status(404).json({ success: false, error: "Conversation not found" });
+    }
+
+    if (!history.shareId) {
+      history.shareId = crypto.randomUUID();
+      history.isPublic = true;
+      await history.save();
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        shareId: history.shareId,
+        isPublic: history.isPublic
+      },
+      message: "Conversation shared"
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSharedConversation = async (req, res, next) => {
+  try {
+    const { shareId } = req.params;
+
+    // No userId filter needed because it's public, but verify it exists
+    const history = await ChatHistory.findOne({ shareId, isPublic: true })
+      .select("messages title updatedAt")
+      .lean();
+
+    if (!history) {
+      return res.status(404).json({ success: false, error: "Shared conversation not found or is private" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: history
     });
   } catch (error) {
     next(error);

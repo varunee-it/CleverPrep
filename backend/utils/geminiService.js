@@ -30,7 +30,7 @@ ${text.substring(0, 15000)}`;
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-lite",
+            model: "gemini-2.5-flash",
             contents: prompt
         });
 
@@ -97,7 +97,7 @@ ${text.substring(0, 15000)}`;
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-lite",
+            model: "gemini-2.5-flash",
             contents: prompt
         });
 
@@ -163,7 +163,7 @@ ${text.substring(0, 20000)}`;
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-lite",
+            model: "gemini-2.5-flash",
             contents: prompt
         });
 
@@ -178,22 +178,32 @@ ${text.substring(0, 20000)}`;
 
 // ================= CHAT WITH CONTEXT =================
 
-export const chatWithContext = async (question, chunks) => {
+export const chatWithContext = async (question, chunks, historyMessages = [], memorySummary = "") => {
     const context = chunks
         .map((c, i) => `Chunk ${i + 1}:\n${c.content}`)
         .join('\n\n');
 
-    const prompt = `Answer based on context.
+    let historyText = '';
+    if (historyMessages && historyMessages.length > 0) {
+        historyText = 'Recent Conversation:\n' + historyMessages.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n') + '\n\n';
+    }
+
+    let memoryText = '';
+    if (memorySummary) {
+        memoryText = `Long-Term Memory Summary (Context from older messages):\n${memorySummary}\n\n`;
+    }
+
+    const prompt = `Answer based on context, long-term memory, and recent conversation.
 
 Context:
 ${context}
 
-Question:
+${memoryText}${historyText}Question:
 ${question}`;
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-lite",
+            model: "gemini-2.5-flash",
             contents: prompt
         });
 
@@ -205,6 +215,35 @@ ${question}`;
     }
 };
 
+// ================= SUMMARIZE MEMORY =================
+
+export const summarizeMemory = async (oldSummary, messages) => {
+    const messagesText = messages.map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`).join('\n');
+    
+    const prompt = `You are a helpful AI memory assistant. 
+Your task is to merge the following new conversation messages into the existing memory summary.
+Keep it concise, retain important facts, user preferences, learning style, and document context.
+
+Existing Summary:
+${oldSummary || "No existing summary."}
+
+New Messages to Summarize:
+${messagesText.substring(0, 15000)}
+
+Generate the new merged memory summary:`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt
+        });
+
+        return response.text;
+    } catch (error) {
+        console.error('Memory summary error:', error);
+        throw new Error('Failed to generate memory summary');
+    }
+};
 
 // ================= EXPLAIN CODE =================
 
@@ -216,7 +255,7 @@ ${context.substring(0, 10000)}`;
 
     try {
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash-lite",
+            model: "gemini-2.5-flash",
             contents: prompt
         });
 

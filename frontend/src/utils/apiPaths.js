@@ -38,8 +38,26 @@ export const API_PATHS = {
     EXPLAIN_CONCEPT:
       "/api/ai/explain-concept",
 
-    GET_CHAT_HISTORY: (documentId) =>
-      `/api/ai/chat-history/${documentId}`,
+    GET_CHAT_HISTORY: (conversationId) =>
+      `/api/ai/chat-history/${conversationId}`,
+
+    GET_CONVERSATIONS: (documentId) => 
+      `/api/ai/conversations/${documentId}`,
+
+    DELETE_CONVERSATION: (conversationId) => 
+      `/api/ai/conversations/${conversationId}`,
+
+    CLEAR_CONVERSATION: (conversationId) => 
+      `/api/ai/conversations/${conversationId}/clear`,
+
+    RENAME_CONVERSATION: (conversationId) => 
+      `/api/ai/conversations/${conversationId}/rename`,
+
+    SHARE_CONVERSATION: (conversationId) => 
+      `/api/ai/conversations/${conversationId}/share`,
+
+    GET_SHARED_CONVERSATION: (shareId) => 
+      `/api/share/${shareId}`,
   },
   // ==========================================
 // FLASHCARD ROUTES

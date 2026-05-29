@@ -12,6 +12,7 @@ import FlashcardPage from './pages/Flashcards/FlashcardPage';
 import FlashcardsListPage from './pages/Flashcards/FlashcardsListPage';
 import QuizResultPage from './pages/Quizzes/QuizResultPage';
 import ProfilePage from './pages/Profile/ProfilePage';
+import SharedChatPage from './pages/SharedChatPage';
 
 const App = () => {
   const { isAuthenticated,loading } = useAuth();
@@ -41,6 +42,9 @@ const App = () => {
 
         <Route path='/login' element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
+        
+        {/* Public Shared Routes */}
+        <Route path='/share/:shareId' element={<SharedChatPage />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute/>}>

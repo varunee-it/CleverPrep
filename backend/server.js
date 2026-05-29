@@ -13,6 +13,7 @@ import FlashcardRoutes from './routes/flashcardRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
+import shareRoutes from './routes/shareRoutes.js';
 // Debug (optional)
 console.log("MONGO_URI 👉", process.env.MONGO_URI);
 
@@ -54,6 +55,7 @@ app.use('/api/flashcards', FlashcardRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/share', shareRoutes);
 
 
 app.get("/", (req, res) => {
@@ -85,9 +87,7 @@ app.use(errorHandler);
 
 
 
-// ================= SERVER =================
-
-const PORT = 5050
+const PORT = process.env.PORT || 5050;
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`);
