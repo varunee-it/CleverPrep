@@ -1,5 +1,8 @@
 import axios from "axios";
 import { BASE_URL } from "./apiPaths";
+import toast from "react-hot-toast";
+
+let isRedirecting = false;
 
 // ==========================================
 // Create Axios Instance
@@ -53,13 +56,26 @@ axiosInstance.interceptors.response.use(
   // Error Response
   (error) => {
 
- 
-if( error.response) {
+    if (error.response?.data?.expired) {
+      if (!isRedirecting) {
+        isRedirecting = true;
+        localStorage.removeItem("token");
+        toast.error("Session expired. Please login again.");
+        window.location.href = "/login";
+      }
+      return Promise.reject(error);
+    }
+
+    if( error.response) {
       // Internal server error
       if (error.response.status === 500) {
 
         console.error(
-          "Server error. Please try again later."
+          error.response?.data || error.message || error
+        );
+      } else {
+        console.error(
+          error.response?.data || error.message || error
         );
       }
 
@@ -71,6 +87,10 @@ if( error.response) {
       console.error(
         "Request timeout. Please try again."
       );
+    } else {
+        console.error(
+          error.message || error
+        );
     }
 
     return Promise.reject(error);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 import Spinner from "../../components/common/Spinner";
 import progressService from "../../services/progressService";
@@ -15,8 +15,12 @@ import {
 const DashboardPage = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const fetchInitiated = useRef(false);
 
   useEffect(() => {
+    if (fetchInitiated.current) return;
+    fetchInitiated.current = true;
+
     const fetchDashboardData = async () => {
       try {
         const data =
@@ -30,7 +34,7 @@ const DashboardPage = () => {
           "Failed to fetch dashboard data."
         );
 
-        console.error(error);
+        console.error(error.response?.data || error.message || error);
       } finally {
         setLoading(false);
       }

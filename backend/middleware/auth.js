@@ -9,6 +9,7 @@ const protect = async (req, res, next) => {
             token = req.headers.authorization.split(" ")[1];
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = await User.findById(decoded.id).select("-password");
+            console.log(`[Auth Middleware] JWT verified. User ID: ${req.user?._id}`);
             if(!req.user){
                 return res.status(401).json({
                    success: false,
@@ -18,11 +19,12 @@ const protect = async (req, res, next) => {
             }
             return next();
         } catch (error) {
-            console.error('Auth middleware error: ', error.message);
+            console.error('[Auth Middleware] JWT Verification Error:', error.message);
             if(error.name==='TokenExpiredError'){
                 return res.status(401).json({
                     success: false,
-                    error: "Session expired, please login again",
+                    message: "Session expired",
+                    expired: true,
                     statusCode: 401
                 });
             }
@@ -34,6 +36,7 @@ const protect = async (req, res, next) => {
         }
     }
     if(!token){
+        console.error('[Auth Middleware] Authorization failed: No token provided');
         return res.status(401).json({
             success: false,
             error: "Not authorized, no token",

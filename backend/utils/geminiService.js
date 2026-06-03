@@ -167,6 +167,10 @@ ${text.substring(0, 20000)}`;
             contents: prompt
         });
 
+        if (!response || !response.text) {
+            throw new Error("Empty response from Gemini");
+        }
+
         return response.text;
 
     } catch (error) {
@@ -245,9 +249,9 @@ Generate the new merged memory summary:`;
     }
 };
 
-// ================= EXPLAIN CODE =================
+// ================= EXPLAIN CONCEPT =================
 
-export const explainCode = async (concept, context) => {
+export const explainConcept = async (concept, context) => {
     const prompt = `Explain "${concept}" clearly with examples.
 
 Context:
@@ -258,6 +262,10 @@ ${context.substring(0, 10000)}`;
             model: "gemini-2.5-flash",
             contents: prompt
         });
+
+        if (!response || !response.text) {
+            throw new Error("Empty response from Gemini");
+        }
 
         return response.text;
 

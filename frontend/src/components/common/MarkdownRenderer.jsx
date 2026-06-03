@@ -39,7 +39,7 @@ const MarkdownRenderer = ({content}) => {
               </code>
             );
           },
-          pre: ({ node, ...props }) => <pre className="bg-neutral-800 text-white-p-3 rounded-md overflow-x-auto font-mono text-sm my-4" {...props} />,
+          pre: ({ node, ...props }) => <pre className="bg-neutral-800 text-white p-3 rounded-md overflow-x-auto font-mono text-sm my-4" {...props} />,
         }}
       >
         {content}

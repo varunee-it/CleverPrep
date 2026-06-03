@@ -14,6 +14,9 @@ const __dirname = path.dirname(__filename);
 /* ================= UPLOAD DOCUMENT ================= */
 export const uploadDocument = async (req, res, next) => {
   try {
+    console.log("[Document Upload] Starting upload for user:", req.user?._id);
+    console.log("[Document Upload] Uploaded file:", req.file ? "Exists" : "Missing");
+
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -54,6 +57,7 @@ export const uploadDocument = async (req, res, next) => {
       data: document,
     });
   } catch (error) {
+    console.error("[Document Upload] Error saving document:", error);
     if (req.file) {
       await fs.unlink(req.file.path).catch(() => {});
     }

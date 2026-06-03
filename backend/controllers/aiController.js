@@ -119,30 +119,27 @@ export const generateQuiz = async (req, res, next) => {
 
 export const generateSummary = async (req, res, next) => {
   try {
-    const { documentId } = req.params;
+    const { documentId } = req.body;
+    console.log("Authenticated user:", req.user?._id);
+    console.log("Generate summary request:", req.body);
 
     if (!documentId) {
       return res.status(400).json({
         success: false,
-        error: "Document ID is required",
-        statusCode: 400,
+        message: "Document ID is required",
       });
     }
 
-    const document = await Document.findOne({
-      _id: documentId,
-      userId: req.user._id,
-      status: "ready",
-    });
+    const document = await Document.findById(documentId);
 
     if (!document) {
       return res.status(404).json({
         success: false,
-        error: "Document not found",
-        statusCode: 404,
+        message: "Document not found",
       });
     }
 
+    console.log("Calling Gemini...");
     const summary = await geminiService.generateSummary(
       document.extractedText
     );
@@ -157,7 +154,11 @@ export const generateSummary = async (req, res, next) => {
       message: "Summary generated successfully",
     });
   } catch (error) {
-    next(error);
+    console.error("Generate Summary Error:", error);
+    return res.status(500).json({
+        success: false,
+        message: error.message || "AI request failed"
+    });
   }
 };
 
@@ -280,26 +281,29 @@ export const chat = async (req, res, next) => {
 export const explainConcept = async (req, res, next) => {
   try {
     const { documentId, concept } = req.body;
+    console.log("Authenticated user:", req.user?._id);
+    console.log("Explain concept request:", req.body);
 
-    if (!documentId || !concept) {
+    if (!documentId) {
       return res.status(400).json({
         success: false,
-        error: "Please provide documentId and concept",
-        statusCode: 400,
+        message: "Document ID is required",
       });
     }
 
-    const document = await Document.findOne({
-      _id: documentId,
-      userId: req.user._id,
-      status: "ready",
-    });
+    if (!concept?.trim()) {
+        return res.status(400).json({
+            success: false,
+            message: "Concept is required"
+        });
+    }
+
+    const document = await Document.findById(documentId);
 
     if (!document) {
       return res.status(404).json({
         success: false,
-        error: "Document not found",
-        statusCode: 404,
+        message: "Document not found",
       });
     }
 
@@ -313,6 +317,7 @@ export const explainConcept = async (req, res, next) => {
       .map((chunk) => chunk.content)
       .join("\n\n");
 
+    console.log("Calling Gemini...");
     const explanation = await geminiService.explainConcept(
       concept,
       context
@@ -330,7 +335,11 @@ export const explainConcept = async (req, res, next) => {
       message: "Explanation generated successfully",
     });
   } catch (error) {
-    next(error);
+    console.error("Explain Concept Error:", error);
+    return res.status(500).json({
+        success: false,
+        message: error.message || "AI request failed"
+    });
   }
 };
 

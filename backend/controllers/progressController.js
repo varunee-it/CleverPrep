@@ -9,6 +9,7 @@ import Quiz from '../models/Quize.js';
 // =======================================
 export const getDashboard = async (req, res, next) => {
   try {
+    console.log(`[GET /api/progress/dashboard] Fetching dashboard for user: ${req.user?._id}`);
     const userId = req.user._id;
 
     // =========================
@@ -127,6 +128,7 @@ export const getDashboard = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error("[GET /api/progress/dashboard] Dashboard error:", error);
     next(error);
   }
 };

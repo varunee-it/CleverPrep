@@ -7,6 +7,9 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import PageHeader from '../../components/common/PageHeader';
 import Tabs from '../../components/common/Tabs';
 import ChatInterface from '../../components/chat/ChatInterface';
+import AIActions from '../../components/ai/AIActions';
+import ErrorBoundary from '../../components/common/ErrorBoundary';
+import { BASE_URL } from '../../utils/apiPaths';
 
 const DocumentDetailPage = () => {
 
@@ -41,8 +44,7 @@ const DocumentDetailPage = () => {
       return filePath;
     }
 
-    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-    return `${baseUrl}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
+    return `${BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
   };
 
   const renderContent = () => {
@@ -89,8 +91,12 @@ const DocumentDetailPage = () => {
   };
 
   const renderAIActions = () => {
-  return "renderAIActions"
-};
+    return (
+      <ErrorBoundary>
+        <AIActions />
+      </ErrorBoundary>
+    );
+  };
 
 const renderFlashcardsTab = () => {
   return "renderFlashcardsTab"
