@@ -11,7 +11,7 @@ import AIActions from '../../components/ai/AIActions';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import { BASE_URL } from '../../utils/apiPaths';
 import FlashcardManager from '../Flashcards/FlashcardManager';
-
+import QuizManager from '../../components/quizzes/QuizManager';
 const DocumentDetailPage = () => {
 
   const { id } = useParams();
@@ -113,7 +113,7 @@ const renderFlashcardsTab = () => {
 };
 
 const renderQuizzesTab = () => {
-  return "renderQuizzesTab"
+  return <QuizManager documentId={id} />;
 };
 
 const tabs = [

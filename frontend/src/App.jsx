@@ -11,6 +11,7 @@ import DocumentsDetailPage from './pages/Documents/DocumentsDetailPage';
 import FlashcardPage from './pages/Flashcards/FlashcardPage';
 import FlashcardsListPage from './pages/Flashcards/FlashcardsListPage';
 import QuizResultPage from './pages/Quizzes/QuizResultPage';
+import QuizTakePage from './pages/Quizzes/QuizTakePage';
 import ProfilePage from './pages/Profile/ProfilePage';
 import SharedChatPage from './pages/SharedChatPage';
 
@@ -54,6 +55,8 @@ const App = () => {
         <Route path='/flashcards' element={<FlashcardsListPage/>}/>
         <Route path='/documents/:id/flashcards' element={<QuizResultPage/>}/>
         <Route path='/quizzes/:id/flashcards' element={<QuizResultPage/>}/>
+        <Route path='/quizzes/:quizId' element={<QuizTakePage />} />
+        <Route path='/quizzes/:quizId/results' element={<QuizResultPage />} />
         <Route path='/profile' element={<ProfilePage/>}/>
         </Route>
 
