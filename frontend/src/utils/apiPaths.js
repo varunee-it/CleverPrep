@@ -2,62 +2,62 @@ export const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5050";
 
 export const API_PATHS = {
   AUTH: {
-    REGISTER: "/api/auth/register",
-    LOGIN: "/api/auth/login",
-    GET_PROFILE: "/api/auth/profile",
-    UPDATE_PROFILE: "/api/auth/profile",
-    CHANGE_PASSWORD: "/api/auth/change-password",
+    REGISTER: "/auth/register",
+    LOGIN: "/auth/login",
+    GET_PROFILE: "/auth/profile",
+    UPDATE_PROFILE: "/auth/profile",
+    CHANGE_PASSWORD: "/auth/change-password",
   },
 
   DOCUMENTS: {
-    UPLOAD: "/api/documents/upload",
-    GET_DOCUMENTS: "/api/documents",
+    UPLOAD: "/documents/upload",
+    GET_DOCUMENTS: "/documents",
 
     GET_DOCUMENT_BY_ID: (id) =>
-      `/api/documents/${id}`,
+      `/documents/${id}`,
 
     UPDATE_DOCUMENT: (id) =>
-      `/api/documents/${id}`,
+      `/documents/${id}`,
 
     DELETE_DOCUMENT: (id) =>
-      `/api/documents/${id}`,
+      `/documents/${id}`,
   },
 
   AI: {
     GENERATE_FLASHCARDS:
-      "/api/ai/generate-flashcards",
+      "/ai/generate-flashcards",
 
     GENERATE_QUIZ:
-      "/api/ai/generate-quiz",
+      "/ai/generate-quiz",
 
     GENERATE_SUMMARY:
-      "/api/ai/generate-summary",
+      "/ai/generate-summary",
 
-    CHAT: "/api/ai/chat",
+    CHAT: "/ai/chat",
 
     EXPLAIN_CONCEPT:
-      "/api/ai/explain-concept",
+      "/ai/explain-concept",
 
     GET_CHAT_HISTORY: (conversationId) =>
-      `/api/ai/chat-history/${conversationId}`,
+      `/ai/chat-history/${conversationId}`,
 
     GET_CONVERSATIONS: (documentId) => 
-      `/api/ai/conversations/${documentId}`,
+      `/ai/conversations/${documentId}`,
 
     DELETE_CONVERSATION: (conversationId) => 
-      `/api/ai/conversations/${conversationId}`,
+      `/ai/conversations/${conversationId}`,
 
     CLEAR_CONVERSATION: (conversationId) => 
-      `/api/ai/conversations/${conversationId}/clear`,
+      `/ai/conversations/${conversationId}/clear`,
 
     RENAME_CONVERSATION: (conversationId) => 
-      `/api/ai/conversations/${conversationId}/rename`,
+      `/ai/conversations/${conversationId}/rename`,
 
     SHARE_CONVERSATION: (conversationId) => 
-      `/api/ai/conversations/${conversationId}/share`,
+      `/ai/conversations/${conversationId}/share`,
 
     GET_SHARED_CONVERSATION: (shareId) => 
-      `/api/share/${shareId}`,
+      `/share/${shareId}`,
   },
   // ==========================================
 // FLASHCARD ROUTES
@@ -66,23 +66,23 @@ FLASHCARDS: {
 
   // Get all flashcard sets
   GET_ALL_FLASHCARD_SETS:
-    "/api/flashcards",
+    "/flashcards",
 
   // Get flashcards for a specific document
   GET_FLASHCARDS_FOR_DOC: (documentId) =>
-    `/api/flashcards/${documentId}`,
+    `/flashcards/${documentId}`,
 
   // Review/update flashcard
   REVIEW_FLASHCARD: (cardId) =>
-    `/api/flashcards/${cardId}/review`,
+    `/flashcards/${cardId}/review`,
 
   // Toggle star on flashcard
   TOGGLE_STAR: (cardId) =>
-    `/api/flashcards/${cardId}/star`,
+    `/flashcards/${cardId}/star`,
 
   // Delete flashcard set
   DELETE_FLASHCARD_SET: (id) =>
-    `/api/flashcards/${id}`,
+    `/flashcards/${id}`,
 },
 
 // ==========================================
@@ -92,23 +92,23 @@ QUIZZES: {
 
   // Get quizzes for a document
   GET_QUIZZES_FOR_DOC: (documentId) =>
-    `/api/quizzes/${documentId}`,
+    `/quizzes/${documentId}`,
 
   // Get single quiz by ID
   GET_QUIZ_BY_ID: (id) =>
-    `/api/quizzes/quiz/${id}`,
+    `/quizzes/quiz/${id}`,
 
   // Submit quiz answers
   SUBMIT_QUIZ: (id) =>
-    `/api/quizzes/${id}/submit`,
+    `/quizzes/${id}/submit`,
 
   // Get quiz results
   GET_QUIZ_RESULTS: (id) =>
-    `/api/quizzes/${id}/results`,
+    `/quizzes/${id}/results`,
 
   // Delete quiz
   DELETE_QUIZ: (id) =>
-    `/api/quizzes/${id}`,
+    `/quizzes/${id}`,
 },
 
 // ==========================================
@@ -118,6 +118,6 @@ PROGRESS: {
 
   // Dashboard statistics
   GET_DASHBOARD:
-    "/api/progress/dashboard",
+    "/progress/dashboard",
 },
 };

@@ -10,6 +10,7 @@ import ChatInterface from '../../components/chat/ChatInterface';
 import AIActions from '../../components/ai/AIActions';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
 import { BASE_URL } from '../../utils/apiPaths';
+import FlashcardManager from '../Flashcards/FlashcardManager';
 
 const DocumentDetailPage = () => {
 
@@ -99,7 +100,16 @@ const DocumentDetailPage = () => {
   };
 
 const renderFlashcardsTab = () => {
-  return "renderFlashcardsTab"
+    try {
+        return <FlashcardManager documentId={id} />;
+    } catch (error) {
+        console.error("Flashcards tab error:", error);
+        return (
+            <div className="text-red-500 p-6">
+                Flashcards crashed
+            </div>
+        );
+    }
 };
 
 const renderQuizzesTab = () => {

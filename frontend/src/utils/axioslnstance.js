@@ -8,7 +8,7 @@ let isRedirecting = false;
 // Create Axios Instance
 // ==========================================
 const axiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: `${BASE_URL}/api`,
   timeout: 80000,
 
   headers: {

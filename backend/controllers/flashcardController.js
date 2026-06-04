@@ -40,79 +40,84 @@ export const getFlashcardSets= async (req, res,next) => {
     
 };
 
-export const reviewFlashcard= async (req, res,next) => {
-       try{
-        const flashcard=await Flashcard.findById({
-            'cards._id':req.params.cardId,
-            userId:req.user._id
+export const reviewFlashcard = async (req, res) => {
+    try {
+        const flashcardSet = await Flashcard.findOne({
+            'cards._id': req.params.cardId,
+            userId: req.user._id
         });
 
-        if(!flashcard){
+        if (!flashcardSet) {
             return res.status(404).json({
-                success:false,
-                error:'Flashcard not found',
-                statusCode:404
-            });
-
-
-        }
-        const cardIndex=flashcardSet.cards.findIndex(card=>card._id.toString()===req.params.cardId);
-        if(cardIndex===-1){
-            return res.status(404).json({
-                success:false,
-                error:'Flashcard not found',
-                statusCode:404
+                success: false,
+                message: "Flashcard not found",
             });
         }
-        flashcardSet.cards[cardIndex].lastReviewed=new Date();
-        flashcardSet.cards[cardIndex].reviewCount+=1;
+
+        const card = flashcardSet.cards.id(req.params.cardId);
+        if (!card) {
+            return res.status(404).json({
+                success: false,
+                message: "Flashcard not found",
+            });
+        }
+
+        card.reviewCount = (card.reviewCount || 0) + 1;
+        card.lastReviewed = new Date();
+
         await flashcardSet.save();
+
         res.status(200).json({
-            success:true,
-            data:flashcardSet,
-            message:'Flashcard reviewed successfully'
+            success: true,
+            data: flashcardSet,
         });
-        
-    }catch (error){
-        next(error);
+    } catch (error) {
+        console.error("Review Flashcard Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to review flashcard",
+        });
     }
 };
-export const toggleStarFlashcard = async(req,res,next)=>{
-   try{
-    const flashcardSet=await Flashcard.findOne({
-        'cards._id':req.params.cardId,
-        userId:req.user._id
-    }   );
-    if(!flashcardSet){
-        return res.status(404).json({
-            success:false,
-            error:'Flashcard not found',
-            statusCode:404
+
+export const toggleStar = async (req, res) => {
+    try {
+        const flashcardSet = await Flashcard.findOne({
+            'cards._id': req.params.cardId,
+            userId: req.user._id
         });
 
-    }
-
-
-        const constIndex=flashcardSet.cards.findIndex(card=>card._id.toString()===req.params.cardId);
-
-        if(cardIndex===-1){
+        if (!flashcardSet) {
             return res.status(404).json({
-                success:false,
-                error:'Flashcard not found',
-                statusCode:404
+                success: false,
+                message: "Flashcard not found",
             });
         }
 
-        flashcardSet.cards[cardIndex].isStarred=!flashcardSet.cards[cardIndex].isStarred;
+        const card = flashcardSet.cards.id(req.params.cardId);
+        if (!card) {
+            return res.status(404).json({
+                success: false,
+                message: "Flashcard not found",
+            });
+        }
+
+        card.isStarred = !card.isStarred;
+
         await flashcardSet.save();
+
         res.status(200).json({
-            success:true,
-            data:flashcardSet,
-            message:`Flashcards ${flashcardSet.cards[cardIndex].isStarred?'starred':'unstarred'}`
-        })
-        
-    }catch (error){
-        next(error);
+            success: true,
+            data: flashcardSet,
+        });
+    } catch (error) {
+        console.error("Toggle Star Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to update star status",
+        });
     }
 };
 
