@@ -90,9 +90,38 @@ export const generateQuiz = async (req, res, next) => {
       });
     }
 
+    // 1. Quiz History Awareness
+    const previousQuizzes = await Quiz.find({ documentId, userId: req.user._id });
+    const previousQuestions = previousQuizzes.flatMap(q => q.questions.map(qq => qq.question));
+
+    // 2. Smart Randomization & Chunk Sampling
+    let chunks = [...(document.chunks || [])];
+    
+    // If no chunks array (older documents), manually chunk the text
+    if (chunks.length === 0 && document.extractedText) {
+        const textStr = document.extractedText;
+        for (let i = 0; i < textStr.length; i += 1000) {
+            chunks.push({ content: textStr.substring(i, i + 1000) });
+        }
+    }
+
+    // Fisher-Yates Shuffle
+    for (let i = chunks.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [chunks[i], chunks[j]] = [chunks[j], chunks[i]];
+    }
+    
+    // Select a randomized subset to ensure broad topic coverage (max ~15000 chars)
+    let randomizedText = "";
+    for (const chunk of chunks) {
+        if (randomizedText.length + chunk.content.length > 20000) break;
+        randomizedText += chunk.content + "\n\n";
+    }
+
     const questions = await geminiService.generateQuiz(
-      document.extractedText,
-      parseInt(numQuestions)
+      randomizedText,
+      parseInt(numQuestions),
+      previousQuestions
     );
 
     const quiz = await Quiz.create({

@@ -105,8 +105,15 @@ export const submitQuiz = async (req, res, next) => {
       if (questionIndex < quiz.questions.length) {
         const question = quiz.questions[questionIndex];
 
-        const isCorrect =
-          question.correctAnswer === selectedAnswer;
+        let correctAnswerText = question.correctAnswer;
+        if (typeof question.correctAnswer === 'string' && question.correctAnswer.startsWith('0')) {
+          const correctIdx = parseInt(question.correctAnswer.substring(1)) - 1;
+          if (correctIdx >= 0 && correctIdx < question.options.length) {
+            correctAnswerText = question.options[correctIdx];
+          }
+        }
+
+        const isCorrect = correctAnswerText === selectedAnswer;
 
         if (isCorrect) {
           correctCount++;
@@ -121,10 +128,11 @@ export const submitQuiz = async (req, res, next) => {
       }
     });
 
-    // Calculate score
-    const score = Math.round(
-      (correctCount / quiz.questions.length) * 100
-    );
+    // Calculate score safely
+    const totalQ = quiz.questions.length > 0 ? quiz.questions.length : 1;
+    let score = Math.round((correctCount / totalQ) * 100);
+    if (isNaN(score) || score < 0) score = 0;
+    if (score > 100) score = 100;
 
     // Save quiz result
     quiz.userAnswers = userAnswers;

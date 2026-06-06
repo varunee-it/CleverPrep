@@ -77,10 +77,84 @@ ${text.substring(0, 15000)}`;
 
 // ================= QUIZ =================
 
-export const generateQuiz = async (text, numQuestions = 5) => {
-    const prompt = `Generate exactly ${numQuestions} MCQs.
+// Helper for duplicate detection
+const normalizeText = (text) => {
+    return text.toLowerCase()
+        .replace(/[^\w\s]|_/g, "")
+        .replace(/\b(a|an|the|is|are|was|were|what|which|how|why|when|where|who|do|does|did|can|could|would|should|to|of|for|in|on|at|by|with)\b/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+};
 
-Format:
+const calculateSimilarity = (text1, text2) => {
+    const words1 = normalizeText(text1).split(" ");
+    const words2 = normalizeText(text2).split(" ");
+    if (words1.length === 0 && words2.length === 0) return 1;
+    const set1 = new Set(words1);
+    const set2 = new Set(words2);
+    const intersection = new Set([...set1].filter(x => set2.has(x)));
+    const union = new Set([...set1, ...set2]);
+    return union.size === 0 ? 0 : intersection.size / union.size;
+};
+
+const validateQuestion = (q) => {
+    if (!q.question || q.question.length < 15) return false;
+    if (q.question.split(" ").length < 4) return false; // reject very short/trivial questions
+    if (!Array.isArray(q.options) || q.options.length !== 4) return false;
+    if (!q.explanation || q.explanation.length < 5) return false;
+    if (!q.correctAnswer) return false;
+    if (q.options.some(opt => !opt || opt.trim().length < 2)) return false;
+    
+    const lowerOptions = q.options.map(o => o.toLowerCase().trim());
+    const uniqueOptions = new Set(lowerOptions);
+    if (uniqueOptions.size !== 4) return false;
+    
+    const qLower = q.question.toLowerCase();
+    if (qLower.includes("all of the above") || qLower.includes("none of the above")) return false;
+    if (lowerOptions.some(opt => opt.includes("all of the above") || opt.includes("none of the above"))) return false;
+
+    // Validate correctAnswer maps correctly
+    let isValidCorrectAnswer = false;
+    if (typeof q.correctAnswer === 'string' && q.correctAnswer.startsWith('0')) {
+        const idx = parseInt(q.correctAnswer.substring(1)) - 1;
+        if (idx >= 0 && idx < 4) isValidCorrectAnswer = true;
+    } else {
+        isValidCorrectAnswer = q.options.some(opt => opt.trim() === q.correctAnswer.trim());
+    }
+    
+    if (!isValidCorrectAnswer) return false;
+
+    return true;
+};
+
+export const generateQuiz = async (text, numQuestions = 5, previousQuestions = []) => {
+    const finalQuestions = [];
+    let attempts = 0;
+    const maxAttempts = 3;
+    let totalRejected = 0;
+
+    while (finalQuestions.length < numQuestions && attempts < maxAttempts) {
+        attempts++;
+        const needed = numQuestions - finalQuestions.length;
+        const targetGeneration = Math.min(needed * 2 + 2, 25);
+        
+        const prompt = `You are a premium EdTech Quiz Generator. Generate exactly ${targetGeneration} highly diverse, conceptual MCQs based on the provided text.
+
+CRITICAL INSTRUCTIONS:
+1. DO NOT repeat or slightly reword these previous questions (if any):
+${previousQuestions.length > 0 ? previousQuestions.map(q => "- " + q).join('\n') : "None"}
+
+2. MIX QUESTION STYLES: Include conceptual, application-based, scenario-based, reasoning-based, and fill-in-the-gap questions. Avoid mere definition recall.
+3. DIFFICULTY DISTRIBUTION: Aim for ~30% Easy (direct recall), ~50% Medium (understanding/application), ~20% Hard (reasoning/scenario logic).
+4. DISTRACTORS: Wrong answers must be believable, conceptually close, and reflect common misconceptions. Do NOT use obvious nonsense.
+5. CONSTRAINTS: 
+   - Ensure exactly ONE correct answer.
+   - Do NOT use "All of the above" or "None of the above".
+   - Avoid duplicate options.
+   - Randomize the placement of the correct option (don't always make Option 1 correct).
+   - Ensure broad topic coverage across the text.
+
+Format EXACTLY as:
 Q: Question
 01: Option 1
 02: Option 2
@@ -90,10 +164,10 @@ C: Correct option
 E: Explanation
 D: easy/medium/hard
 
-Separate with "---"
+Separate each question block with "---"
 
 Text:
-${text.substring(0, 15000)}`;
+${text.substring(0, 20000)}`;
 
     try {
         const response = await ai.models.generateContent({
@@ -101,56 +175,111 @@ ${text.substring(0, 15000)}`;
             contents: prompt
         });
 
+        if (!response || !response.text) {
+            console.error("[QuizGen] Malformed or empty AI response.");
+            continue;
+        }
+
         const generatedText = response.text;
-        const questions = [];
+        let generatedQuestions = [];
 
         const blocks = generatedText.split('---').filter(q => q.trim());
 
         for (const block of blocks) {
-            const lines = block.trim().split('\n');
+            try {
+                const lines = block.trim().split('\n');
+                let question = '';
+                let options = [];
+                let correctAnswer = '';
+                let explanation = '';
+                let difficulty = 'medium';
 
-            let question = '';
-            let options = [];
-            let correctAnswer = '';
-            let explanation = '';
-            let difficulty = 'medium';
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed) continue;
 
-            for (const line of lines) {
-                const trimmed = line.trim();
+                    if (trimmed.startsWith('Q:')) {
+                        question = trimmed.substring(2).trim().replace(/\n/g, ' ');
+                    } else if (/^0\d:/.test(trimmed)) {
+                        options.push(trimmed.substring(3).trim().replace(/\n/g, ' '));
+                    } else if (trimmed.startsWith('C:')) {
+                        correctAnswer = trimmed.substring(2).trim().replace(/\n/g, ' ');
+                    } else if (trimmed.startsWith('E:')) {
+                        explanation = trimmed.substring(2).trim().replace(/\n/g, ' ');
+                    } else if (trimmed.startsWith('D:')) {
+                        const diff = trimmed.substring(2).trim().toLowerCase();
+                        if (['easy', 'medium', 'hard'].includes(diff)) difficulty = diff;
+                    }
+                }
 
-                if (trimmed.startsWith('Q:')) {
-                    question = trimmed.substring(2).trim();
-                } else if (/^0\d:/.test(trimmed)) {
-                    options.push(trimmed.substring(3).trim());
-                } else if (trimmed.startsWith('C:')) {
-                    correctAnswer = trimmed.substring(2).trim();
-                } else if (trimmed.startsWith('E:')) {
-                    explanation = trimmed.substring(2).trim();
-                } else if (trimmed.startsWith('D:')) {
-                    const diff = trimmed.substring(2).trim().toLowerCase();
-                    if (['easy', 'medium', 'hard'].includes(diff)) {
-                        difficulty = diff;
+                if (question && options.length === 4 && correctAnswer) {
+                    const candidate = {
+                        question,
+                        options,
+                        correctAnswer,
+                        explanation: explanation || "Correct answer.",
+                        difficulty,
+                        generatedAt: new Date(),
+                        generationBatch: Date.now()
+                    };
+                    if (validateQuestion(candidate)) {
+                        generatedQuestions.push(candidate);
+                    } else {
+                        totalRejected++;
+                    }
+                }
+            } catch (err) {
+                // Safe parser fallback: ignore malformed block
+                totalRejected++;
+            }
+        }
+
+        for (const candidate of generatedQuestions) {
+            let isDuplicate = false;
+            let highestSimilarity = 0;
+
+            for (const pastQ of previousQuestions) {
+                const sim = calculateSimilarity(candidate.question, pastQ);
+                if (sim > highestSimilarity) highestSimilarity = sim;
+                if (sim >= 0.70) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+
+            if (!isDuplicate) {
+                for (const selected of finalQuestions) {
+                    const sim = calculateSimilarity(candidate.question, selected.question);
+                    if (sim > highestSimilarity) highestSimilarity = sim;
+                    if (sim >= 0.70) {
+                        isDuplicate = true;
+                        break;
                     }
                 }
             }
 
-            if (question && options.length === 4 && correctAnswer) {
-                questions.push({
-                    question,
-                    options,
-                    correctAnswer,
-                    explanation,
-                    difficulty
-                });
+            if (isDuplicate) {
+                totalRejected++;
+            } else {
+                finalQuestions.push(candidate);
             }
+
+            if (finalQuestions.length >= numQuestions) break;
         }
-
-        return questions.slice(0, numQuestions);
-
     } catch (error) {
-        console.error('Error generating quiz:', error);
-        throw new Error('Failed to generate quiz');
+        console.error('[QuizGen ERROR] Exception during generation attempt:', error);
     }
+    }
+
+    if (finalQuestions.length === 0) {
+        throw new Error("Failed to generate any valid questions. Please try again.");
+    } else if (finalQuestions.length < numQuestions) {
+        console.warn(`[QuizGen] Partial quiz generated: ${finalQuestions.length}/${numQuestions}`);
+    }
+
+    console.log(`[QuizGen] Final Selected: ${finalQuestions.length}/${numQuestions}. Total Rejected: ${totalRejected}.`);
+
+    return finalQuestions.slice(0, numQuestions);
 };
 
 

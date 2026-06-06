@@ -82,7 +82,7 @@ const QuizTakePage = () => {
     );
   }
 
-  if (!quiz || quiz.questions.length === 0) {
+  if (!quiz || !quiz.questions || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
@@ -93,7 +93,7 @@ const QuizTakePage = () => {
   }
 
   const currentQuestion = quiz.questions[currentQuestionIndex];
-  const isAnswered = selectedAnswers.hasOwnProperty(currentQuestion._id);
+  const hasAnsweredCurrentQuestion = selectedAnswers.hasOwnProperty(currentQuestion._id);
   const answeredCount = Object.keys(selectedAnswers).length;
 
   return (
@@ -199,7 +199,7 @@ const QuizTakePage = () => {
         {currentQuestionIndex === quiz.questions.length - 1 ? (
           <button
             onClick={handleSubmitQuiz}
-            disabled={submitting}
+            disabled={submitting || !hasAnsweredCurrentQuestion}
             className="group relative px-8 h-12 bg-linear-to-r from-emerald-500 to-emerald-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 overflow-hidden"
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
@@ -220,7 +220,8 @@ const QuizTakePage = () => {
         ) : (
           <Button
             onClick={handleNextQuestion}
-            disabled={submitting}
+            disabled={submitting || !hasAnsweredCurrentQuestion}
+            className="disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
             <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={2.5} />
@@ -238,7 +239,7 @@ const QuizTakePage = () => {
             <button
               key={index}
               onClick={() => setCurrentQuestionIndex(index)}
-              disabled={submitting}
+              disabled={submitting || (index > currentQuestionIndex && !hasAnsweredCurrentQuestion)}
               className={`w-8 h-8 rounded-lg font-semibold text-xs transition-all duration-200 ${isCurrent
                   ? 'bg-linear-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 scale-110'
                   : isAnsweredQuestion
