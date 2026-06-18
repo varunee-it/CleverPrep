@@ -152,34 +152,58 @@ export const logout = async (req, res,next) => {
 };
 export const changePassword = async (req, res,next) => {
     try{
+        console.log("[Auth] Change password requested for user:", req.user._id); // Temp Debug
         const {currentPassword,newPassword} = req.body;
+        
        if(!currentPassword || !newPassword){
+        console.log("[Auth] Missing password fields"); // Temp Debug
         return res.status(400).json({
             success:false,
-            error:"please provide current and new password",
-            statuseCode:400,
+            error:"Please provide current and new password",
+            statusCode:400,
         });
        }
+       
+       console.log("[Auth] Fetching user from DB..."); // Temp Debug
        const user = await User.findById(req.user._id).select("+password");
-       const isMatch = await user.matchPassword(currentPassword);
-       if(!isMatch){
-        return res.status(400).json({
-            success:false,
-            error:"current password is incorrect",
-            statuseCode:401,
+       if (!user) {
+        console.log("[Auth] User not found"); // Temp Debug
+        return res.status(404).json({
+            success: false,
+            error: "User not found",
+            statusCode: 404,
         });
        }
+       
+       console.log("[Auth] Comparing current password..."); // Temp Debug
+       const isMatch = await user.comparePassword(currentPassword);
+       if(!isMatch){
+        console.log("[Auth] Current password is incorrect"); // Temp Debug
+        return res.status(400).json({
+            success:false,
+            error:"Current password is incorrect",
+            statusCode:401,
+        });
+       }
+       
+       console.log("[Auth] Saving new password to DB..."); // Temp Debug
        user.password = newPassword;
        await user.save();
+       
+       console.log("[Auth] Password changed successfully"); // Temp Debug
        res.status(200).json({
         success:true,
-        message:"password changed successfully",
-       
+        message:"Password changed successfully",
        });
     }
 
     catch(error){
-        next(error);
+        console.error("[Auth] Password update failed:", error); // Temp Debug
+        return res.status(500).json({
+            success: false,
+            error: "Password update failed",
+            statusCode: 500,
+        });
     }
     
 };

@@ -13,8 +13,8 @@ import moment from "moment";
 
 import flashcardService from "../../services/flashcardService";
 import aiService from "../../services/aiService";
-import Spinner from "../../components/common/Spinner";
-import Modal from "../../components/common/Modal";
+import Spinner from "../common/Spinner";
+import Modal from "../common/Modal";
 import Flashcard from "./Flashcard";
 
 const FlashcardManager = ({ documentId }) => {

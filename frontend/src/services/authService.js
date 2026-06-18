@@ -124,17 +124,17 @@ export const changePassword = async (
 ) => {
 
   try {
-
+    console.log("[AuthService] Sending change password request", passwords); // Temp Debug
     const response =
       await axiosInstance.post(
         API_PATHS.AUTH.CHANGE_PASSWORD,
         passwords
       );
-
+    console.log("[AuthService] Response received:", response.data); // Temp Debug
     return response.data;
 
   } catch (error) {
-
+    console.error("[AuthService] Request failed:", error.response?.data || error); // Temp Debug
     throw (
       error.response?.data || {
         message: "An unknown error occurred",
