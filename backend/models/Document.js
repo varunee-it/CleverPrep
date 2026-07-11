@@ -12,11 +12,24 @@ const DocumentSchema = new mongoose.Schema({
     },
     fileName: {
         type: String,
-        required: [true, "Please provide a file name"],
+        required: false,
     },
     filePath: {
         type: String,
-        required: [true, "Please provide a file url"],
+        required: false,
+    },
+    gridFsFileId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "documents.files",
+        required: false,
+    },
+    contentType: {
+        type: String,
+        required: false,
+    },
+    originalFileName: {
+        type: String,
+        required: false,
     },
     fileSize: {
         type: Number,

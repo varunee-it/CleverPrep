@@ -49,12 +49,10 @@ const DocumentDetailPage = () => {
   }, [id]);
 
   const getPdfUrl = () => {
-    if (!document?.data?.filePath) return null;
-    const filePath = document.data.filePath;
-    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
-      return filePath;
-    }
-    return `${BASE_URL}${filePath.startsWith('/') ? '' : '/'}${filePath}`;
+    if (!document?.data) return null;
+    const token = localStorage.getItem("token");
+    const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+    return `${BASE_URL}/api/documents/${id}/file${tokenParam}`;
   };
 
   if (loading) {

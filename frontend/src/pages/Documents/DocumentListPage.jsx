@@ -97,6 +97,12 @@ const DocumentListPage = () => {
     const file = e.target.files[0];
 
     if (file) {
+      if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        toast.error("Only PDF files are allowed!");
+        e.target.value = ""; // Reset file input
+        setUploadFile(null);
+        return;
+      }
 
       setUploadFile(file);
 

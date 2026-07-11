@@ -33,6 +33,10 @@ const errorHandler = (err, req, res, next) => {
         statusCode = 400;
     }
 
+    if (err.message === "Only PDF files are allowed!") {
+        statusCode = 400;
+    }
+
     console.error("❌ Error:", err);
 
     res.status(statusCode).json({
