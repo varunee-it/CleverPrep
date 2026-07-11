@@ -7,9 +7,9 @@ import PageHeader from '../../components/common/PageHeader.jsx';
 import Spinner from '../../components/common/Spinner.jsx';
 import toast from 'react-hot-toast';
 import Button from '../../components/common/Button.jsx';
+import Modal from '../../components/common/Modal.jsx';
 
 const QuizTakePage = () => {
-
   const { quizId } = useParams();
   const navigate = useNavigate();
   const [quiz, setQuiz] = useState(null);
@@ -17,12 +17,36 @@ const QuizTakePage = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
         const response = await quizService.getQuizById(quizId);
-        setQuiz(response.data);
+        const data = response.data;
+        
+        // Redirect to results if quiz is already completed
+        if (data.completedAt) {
+          navigate(`/quizzes/${quizId}/results`);
+          return;
+        }
+
+        setQuiz(data);
+
+        // Pre-populate with previous user answers if any exist
+        if (data.userAnswers && data.userAnswers.length > 0) {
+          const answers = {};
+          data.questions.forEach((q, qIndex) => {
+            const userAnswer = data.userAnswers.find(a => a.questionIndex === qIndex);
+            if (userAnswer) {
+              const optIndex = q.options.indexOf(userAnswer.selectedAnswer);
+              if (optIndex !== -1) {
+                answers[q._id] = optIndex;
+              }
+            }
+          });
+          setSelectedAnswers(answers);
+        }
       } catch (error) {
         toast.error('Failed to fetch quiz.');
         console.error(error);
@@ -32,7 +56,7 @@ const QuizTakePage = () => {
     };
 
     fetchQuiz();
-  }, [quizId]);
+  }, [quizId, navigate]);
 
   const handleOptionChange = (questionId, optionIndex) => {
     setSelectedAnswers((prev) => ({
@@ -54,6 +78,7 @@ const QuizTakePage = () => {
   };
 
   const handleSubmitQuiz = async () => {
+    if (submitting) return; // Prevent duplicate submissions
     setSubmitting(true);
     try {
       const formattedAnswers = Object.keys(selectedAnswers).map(questionId => {
@@ -76,7 +101,7 @@ const QuizTakePage = () => {
 
   if (loading) {
     return (
-      <div className="">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <Spinner />
       </div>
     );
@@ -95,41 +120,69 @@ const QuizTakePage = () => {
   const currentQuestion = quiz.questions[currentQuestionIndex];
   const hasAnsweredCurrentQuestion = selectedAnswers.hasOwnProperty(currentQuestion._id);
   const answeredCount = Object.keys(selectedAnswers).length;
+  const unansweredCount = quiz.questions.length - answeredCount;
+  const completionPct = Math.round((currentQuestionIndex / quiz.questions.length) * 100);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-3xl mx-auto select-none">
       <PageHeader title={quiz.title || 'Take Quiz'} />
 
-      {/* Progress Bar */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
+      {/* Progress Section */}
+      <div className="mb-6 space-y-3.5">
+        <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-slate-700">
             Question {currentQuestionIndex + 1} of {quiz.questions.length}
           </span>
-
-          <span className="text-sm font-medium text-slate-500">
-            {answeredCount} answered
+          <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+            {completionPct}% Complete
           </span>
         </div>
 
-        <div className="relative h-2 bg-slate-100 rounded-full overflow-hidden">
+        {/* Animated Progress Bar */}
+        <div className="relative h-1.5 bg-slate-100 rounded-full overflow-hidden">
           <div
             className="absolute inset-y-0 left-0 bg-linear-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500 ease-out"
             style={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}
           />
         </div>
+
+        {/* Compact Sub-Progress Question Navigator */}
+        <div className="flex items-center justify-center gap-1.5 pt-1.5 flex-wrap border-t border-slate-100">
+          {quiz.questions.map((q, idx) => {
+            const isAnswered = selectedAnswers.hasOwnProperty(q._id);
+            const isCurrent = idx === currentQuestionIndex;
+
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setCurrentQuestionIndex(idx)}
+                disabled={submitting}
+                className={`w-7.5 h-7.5 rounded-lg font-bold text-xs transition-all duration-200 ${
+                  isCurrent
+                    ? 'ring-2 ring-emerald-500 ring-offset-1 bg-emerald-500 text-white shadow-xs'
+                    : isAnswered
+                      ? 'bg-emerald-100 border border-emerald-200 text-emerald-700 hover:bg-emerald-200'
+                      : 'bg-slate-100 text-slate-500 border border-transparent hover:bg-slate-200'
+                }`}
+                aria-label={`Jump to question ${idx + 1}`}
+              >
+                {idx + 1}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Question Card */}
-      <div className="bg-white/80 backdrop-blur-xl border-2 border-slate-200 rounded-2xl shadow-xl shadow-slate-200/50 p-6 mb-8">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-emerald-500 to-teal-50 border botder-emerald-200 rounded-xl mb-6 ">
-          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-          <span className="text-sm font-semibold text-slate-700">
-            Question {currentQuestionIndex + 1}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-lg mb-6">
+          <span className="text-xs font-bold text-emerald-700">
+            QUESTION {currentQuestionIndex + 1}
           </span>
         </div>
 
-        <h3 className="text-lg font-semibold text-slate-900 mb-6 leading-relaxed">
+        <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-6 leading-relaxed">
           {currentQuestion.question}
         </h3>
 
@@ -140,10 +193,11 @@ const QuizTakePage = () => {
             return (
               <label
                 key={index}
-                className={`group relative flex items-center p-3 border-2 rounded-xl cursor-pointer transition-all duration-200 ${isSelected
-                  ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-500/10'
-                  : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-white hover:shadow-md'
-                  }`}
+                className={`group relative flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 active:scale-[0.99] hover:-translate-y-0.5 ${
+                  isSelected
+                    ? 'border-emerald-500 bg-emerald-50/40 shadow-md shadow-emerald-500/10'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs'
+                }`}
               >
                 <input
                   type="radio"
@@ -153,32 +207,28 @@ const QuizTakePage = () => {
                   onChange={() => handleOptionChange(currentQuestion._id, index)}
                   className="sr-only"
                 />
+                
                 {/* Custom Radio Button */}
                 <div
-                  className={`shrink-0 w-5 h-5 rounded-full border-2 transition-all duration-200 ${isSelected
-                    ? 'border-emerald-500 bg-emerald-500'
-                    : 'border-slate-300 bg-white group-hover:border-emerald-400'
-                    }`}
+                  className={`shrink-0 w-5 h-5 rounded-full border-2 transition-all duration-200 flex items-center justify-center ${
+                    isSelected
+                      ? 'border-emerald-500 bg-emerald-500'
+                      : 'border-slate-300 bg-white group-hover:border-emerald-400'
+                  }`}
                 >
                   {isSelected && (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full" />
-                    </div>
+                    <div className="w-1.5 h-1.5 bg-white rounded-full animate-in scale-in duration-200" />
                   )}
                 </div>
+
                 {/* Option Text */}
                 <span
-                  className={`ml-4 text-sm font-medium transition-colors duration-200 ${isSelected ? 'text-emerald-900' : 'text-slate-700 group-hover:text-slate-900'
-                    }`} >
+                  className={`ml-4 text-sm font-semibold transition-colors duration-200 ${
+                    isSelected ? 'text-slate-800' : 'text-slate-600 group-hover:text-slate-800'
+                  }`}
+                >
                   {option}
                 </span>
-                {/* Selected Checkmark */}
-                {isSelected && (
-                  <CheckCircle2
-                    className="ml-auto w-5 h-5 text-emerald-500"
-                    strokeWidth={2.5}
-                  />
-                )}
               </label>
             );
           })}
@@ -186,74 +236,113 @@ const QuizTakePage = () => {
       </div>
 
       {/* Navigation Buttons */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 select-none">
         <Button
           onClick={handlePreviousQuestion}
           disabled={currentQuestionIndex === 0 || submitting}
           variant="secondary"
         >
-          <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-200" strokeWidth={2.5} />
+          <ChevronLeft className="w-4 h-4" strokeWidth={2.5} />
           Previous
         </Button>
 
         {currentQuestionIndex === quiz.questions.length - 1 ? (
           <button
-            onClick={handleSubmitQuiz}
-            disabled={submitting || !hasAnsweredCurrentQuestion}
-            className="group relative px-8 h-12 bg-linear-to-r from-emerald-500 to-emerald-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 overflow-hidden"
+            onClick={() => setShowSubmitModal(true)}
+            disabled={submitting}
+            className="group relative px-6 h-11 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-emerald-500/15 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed outline-hidden"
           >
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              {submitting ? (
-                <>
-                  <div className="w-4 h-4 border-white/30 border-t-white rounded-full animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" strokeWidth={2.5} />
-                  Submit Quiz
-                </>
-              )}
+            <span className="relative z-10 flex items-center justify-center gap-1.5">
+              <CheckCircle2 className="w-4.5 h-4.5" strokeWidth={2.5} />
+              Submit Quiz
             </span>
-            <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group:hover:translate-x-full transition-transform duration-700" />
           </button>
         ) : (
           <Button
             onClick={handleNextQuestion}
-            disabled={submitting || !hasAnsweredCurrentQuestion}
-            className="disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={submitting}
           >
             Next
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={2.5} />
+            <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
           </Button>
         )}
       </div>
 
-      {/* Question Navigation Dots */}
-      <div className="mt-0 flex items-center justify-center gap-2 flex-wrap">
-        {quiz.questions.map((_, index) => {
-          const isAnsweredQuestion = selectedAnswers.hasOwnProperty(quiz.questions[index]._id);
-          const isCurrent = index === currentQuestionIndex;
+      {/* Submit Loader Backdrop / Modal */}
+      <Modal
+        isOpen={submitting}
+        onClose={() => {}}
+        title="Evaluating"
+        showClose={false}
+      >
+        <div className="py-8 text-center space-y-4 flex flex-col items-center justify-center select-none">
+          <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+          <p className="text-base font-bold text-slate-800">
+            Evaluating your answers...
+          </p>
+          <p className="text-xs text-slate-400 font-semibold">
+            Gemini is grading your test results.
+          </p>
+        </div>
+      </Modal>
 
-          return (
-            <button
-              key={index}
-              onClick={() => setCurrentQuestionIndex(index)}
-              disabled={submitting || (index > currentQuestionIndex && !hasAnsweredCurrentQuestion)}
-              className={`w-8 h-8 rounded-lg font-semibold text-xs transition-all duration-200 ${isCurrent
-                  ? 'bg-linear-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/25 scale-110'
-                  : isAnsweredQuestion
-                    ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {index + 1}
-            </button>
-          );
-        })}
-      </div>
+      {/* Accidental Submission Confirmation Dialog */}
+      <Modal
+        isOpen={showSubmitModal}
+        onClose={() => { if (!submitting) setShowSubmitModal(false); }}
+        title="Submit Quiz"
+      >
+        {unansweredCount > 0 ? (
+          <div className="space-y-6 py-2">
+            <p className="text-sm text-slate-600 font-semibold leading-relaxed">
+              You still have <span className="font-extrabold text-slate-900">{unansweredCount}</span> unanswered question(s).
+              Would you like to review them first?
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSubmitModal(false)}
+                className="px-5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all outline-hidden"
+              >
+                Review Questions
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowSubmitModal(false); handleSubmitQuiz(); }}
+                disabled={submitting}
+                className="px-5 h-11 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 outline-hidden"
+              >
+                Submit Anyway
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6 py-2">
+            <p className="text-sm text-slate-600 font-semibold leading-relaxed">
+              Are you sure you want to submit your quiz? You won't be able to change your answers after submission.
+            </p>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSubmitModal(false)}
+                className="px-5 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all outline-hidden"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowSubmitModal(false); handleSubmitQuiz(); }}
+                disabled={submitting}
+                className="px-5 h-11 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-95 outline-hidden"
+              >
+                Submit Quiz
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
-  )
-}
+  );
+};
 
-export default QuizTakePage
+export default QuizTakePage;

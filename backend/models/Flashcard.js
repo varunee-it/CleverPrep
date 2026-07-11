@@ -12,10 +12,44 @@ const FlashcardSchema = new mongoose.Schema({
         ref: "Document",
         required: true
     },
+    settings: {
+        studyMode: { type: String, default: "Balanced Study" },
+        flashcardCount: { type: String, default: "10" },
+        difficulty: { type: String, default: "Intermediate" },
+        includeExplanation: { type: Boolean, default: true },
+        includeMemoryTips: { type: Boolean, default: true }
+    },
+    insights: {
+        complexity: { type: String, default: "Medium" },
+        estimatedTime: { type: String, default: "10-15 minutes" },
+        recommendedStrategy: { type: String, default: "Review flashcards first, then take the AI Quiz." },
+        confidence: { type: String, default: "High" },
+        docLengthNotice: { type: String, default: "" }
+    },
+    analytics: [
+        {
+            studyDuration: Number,
+            cardsReviewed: Number,
+            cardsBookmarked: Number,
+            againCount: Number,
+            goodCount: Number,
+            easyCount: Number,
+            avgResponseTime: Number,
+            completedAt: { type: Date, default: Date.now }
+        }
+    ],
     cards:  [
         {
             question:{type: String, required: true},
             answer:{type: String, required: true},
+            explanation: {
+                type: String,
+                default: ""
+            },
+            memoryTip: {
+                type: String,
+                default: ""
+            },
             difficulty:{
                 type: String,
                 enum: ["easy", "medium", "hard"],

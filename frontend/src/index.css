@@ -4,14 +4,123 @@
 @theme{
     --font-display:"urbanist", sans-serif;
     --breakpoint-3xl:1920px;
-    --color-primary:#FF9324;
+    --color-primary:#00D492;
 }
 
 @layer base {
     html {
         font-family: var(--font-display);
     }
-    body{
-        background-color: #fcfbfc;
+    body {
+        background-color: #F8FAFC;
     }
+}
+
+/* Card Flip utilities */
+@utility perspective-1200 {
+  perspective: 1200px;
+}
+@utility preserve-3d {
+  transform-style: preserve-3d;
+}
+@utility backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Custom Scrollbar */
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Sparkle Particles Animation */
+@keyframes sparkle-out {
+  0% {
+    transform: translate(0, 0) scale(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--x, 0px), var(--y, 0px)) scale(1.2);
+    opacity: 0;
+  }
+}
+
+@utility animate-sparkle {
+  animation: sparkle-out 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Accessibility: Support for Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .preserve-3d, [style*="preserve-3d"] {
+    transform-style: flat !important;
+  }
+  .transition-all,
+  .transition-transform,
+  .transition-shadow,
+  .duration-700,
+  .duration-600,
+  .duration-500,
+  .duration-300,
+  .transform-gpu {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+    scale: none !important;
+  }
+}
+
+/* Premium Card Flip Timing Curve */
+@utility spring-flip-gpu {
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), scale 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Confetti Rain Keyframes */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@utility animate-confetti {
+  animation: confetti-fall var(--fall-duration, 3.5s) linear forwards;
+}
+
+/* Pulse Badge Keyframes */
+@keyframes badge-pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.3);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+@utility animate-badge-pulse {
+  animation: badge-pulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }

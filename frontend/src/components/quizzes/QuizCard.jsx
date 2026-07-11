@@ -4,7 +4,7 @@ import { Trash2, Award, BarChart3, Play } from 'lucide-react';
 
 const QuizCard = ({ quiz, onDelete }) => {
     return (
-        <div className="group relative bg-white/80 backdrop-blur-xl border-2 border-slate-200 hover:border-emerald-300 rounded-2xl p-4 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/10 flex flex-col justify-between">
+        <div className="group relative bg-white border-2 border-slate-200 hover:border-emerald-300 rounded-2xl p-4 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/10 flex flex-col justify-between">
             <button
                 onClick={(e) => {
                     e.stopPropagation();

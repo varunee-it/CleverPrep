@@ -4,7 +4,8 @@ import {
   getQuizById,
   submitQuiz,
   getQuizResults,
-  deleteQuiz
+  deleteQuiz,
+  resetQuiz
 } from '../controllers/quizController.js';
 
 import protect from '../middleware/auth.js';
@@ -25,6 +26,9 @@ router.post('/:id/submit', submitQuiz);
 
 // Get quiz results
 router.get('/:id/results', getQuizResults);
+
+// Reset quiz for retaking
+router.post('/:id/retake', resetQuiz);
 
 // Delete quiz
 router.delete('/:id', deleteQuiz);

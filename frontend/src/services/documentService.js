@@ -1,5 +1,5 @@
- import axiosInstance from "../utils/axioslnstance";
-import { API_PATHS } from "../utils/apiPaths";
+import axiosInstance from "../utils/axiosInstance";
+import { API_PATHS, BASE_URL } from "../utils/apiPaths";
 
 // ==========================================
 // Get All Documents

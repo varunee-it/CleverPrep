@@ -14,6 +14,7 @@ import aiRoutes from './routes/aiRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
 import shareRoutes from './routes/shareRoutes.js';
+import podcastRoutes from './routes/podcastRoutes.js';
 // Debug (optional)
 console.log("MONGO_URI 👉", process.env.MONGO_URI);
 
@@ -56,6 +57,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/share', shareRoutes);
+app.use('/api/podcasts', podcastRoutes);
 
 
 app.get("/", (req, res) => {

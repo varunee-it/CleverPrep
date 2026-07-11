@@ -1,4 +1,5 @@
-import axiosInstance from "../utils/axioslnstance";
+import axiosInstance from "../utils/axiosInstance";
+import { API_PATHS } from "../utils/apiPaths";
 
 const getAllFlashcardSets = () =>
     axiosInstance.get("/flashcards");
@@ -17,12 +18,16 @@ const reviewFlashcard = (cardId, index) =>
 const deleteFlashcardSet = (id) =>
     axiosInstance.delete(`/flashcards/${id}`);
 
+const saveSessionAnalytics = (setId, data) =>
+    axiosInstance.post(`/flashcards/${setId}/analytics`, data);
+
 const flashcardService = {
     getAllFlashcardSets,
     getFlashcardsForDocument,
     toggleStar,
     reviewFlashcard,
     deleteFlashcardSet,
+    saveSessionAnalytics,
 };
 
 export default flashcardService;

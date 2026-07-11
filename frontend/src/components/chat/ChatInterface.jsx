@@ -286,7 +286,7 @@ const ChatInterface = () => {
     };
 
     return (
-        <div className="flex flex-col md:flex-row h-[70vh] bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden relative">
+        <div className="flex flex-col md:flex-row h-[calc(100vh-12rem)] min-h-[500px] bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden relative">
             
             {/* Share Modal */}
             {shareModalOpen && (

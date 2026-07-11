@@ -114,12 +114,19 @@ const QuizManager = ({ documentId }) => {
     };
 
     return (
-        <div className="bg-white border border-neutral-200 rounded-lg p-6">
-            <div className="flex justify-end gap-2 mb-4">
-                <Button onClick={() => setIsGenerateModalOpen(true)}>
-                    <Plus size={16} />
+        <div className="bg-white border border-slate-200/60 rounded-3xl p-8 max-w-5xl mx-auto w-full shadow-xl shadow-slate-200/50">
+            <div className="flex items-center justify-between mb-8">
+                <div>
+                    <h3 className="text-xl font-bold text-slate-900">Your Quizzes</h3>
+                    <p className="text-sm text-slate-500 mt-1">Test your knowledge on this document</p>
+                </div>
+                <button 
+                    onClick={() => setIsGenerateModalOpen(true)}
+                    className="group inline-flex items-center gap-2 px-5 h-11 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 active:scale-95"
+                >
+                    <Plus size={18} strokeWidth={2.5} />
                     Generate Quiz
-                </Button>
+                </button>
             </div>
 
             {renderQuizzes()}

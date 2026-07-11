@@ -218,6 +218,7 @@ export const getQuizResults = async (req, res, next) => {
           score: quiz.score,
           totalQuestions: quiz.questions.length,
           completedAt: quiz.completedAt,
+          createdAt: quiz.createdAt,
         },
         results: detailedResults,
       },
@@ -252,6 +253,40 @@ export const deleteQuiz = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Quiz deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ==============================
+// @desc    Reset quiz for retaking
+// @route   POST /api/quizzes/:id/retake
+// @access  Private
+// ==============================
+export const resetQuiz = async (req, res, next) => {
+  try {
+    const quiz = await Quiz.findOne({
+      _id: req.params.id,
+      userId: req.user._id,
+    });
+
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        error: "Quiz not found",
+        statusCode: 404,
+      });
+    }
+
+    quiz.userAnswers = [];
+    quiz.score = 0;
+    quiz.completedAt = null;
+    await quiz.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Quiz reset successfully",
     });
   } catch (error) {
     next(error);

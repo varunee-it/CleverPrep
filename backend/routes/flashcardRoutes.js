@@ -3,7 +3,8 @@ import { getFlashcards,
      getFlashcardSets,
       reviewFlashcard,
        toggleStar,
-        deleteFlashcardSet } 
+        deleteFlashcardSet,
+        saveSessionAnalytics } 
         from '../controllers/flashcardController.js';
         import protect from '../middleware/auth.js';
 
@@ -13,6 +14,7 @@ router.get('/', getFlashcardSets);
 router.get('/:documentId', getFlashcards);
 router.patch('/:cardId/review', reviewFlashcard);
 router.patch('/:cardId/star', toggleStar);
+router.post('/:flashcardId/analytics', saveSessionAnalytics);
 router.delete('/:flashcardId', deleteFlashcardSet);
 
 export default router;

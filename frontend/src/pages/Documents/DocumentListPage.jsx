@@ -14,6 +14,7 @@ import documentService from "../../services/documentService";
 import Spinner from "../../components/common/Spinner";
 import Button from "../../components/common/Button";
 import DocumentCard from "../../components/documents/DocumentCard";
+import PageHeader from "../../components/common/PageHeader";
 
 // ==========================================
 // Document List Page Component
@@ -233,65 +234,40 @@ const DocumentListPage = () => {
 
     // Empty State
     if (documents.length === 0) {
-
       return (
-        <div className="flex items-center justify-center min-h-[400px]">
-
-          <div className="text-center max-w-md">
-
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 shadow-lg shadow-slate-200/50 mb-6">
-
-              <FileText
-                className="w-10 h-10 text-slate-400"
-                strokeWidth={1.5}
-              />
-
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center max-w-md bg-white p-10 rounded-3xl border border-slate-200/60 shadow-sm">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-emerald-50 mb-6">
+              <FileText className="w-10 h-10 text-emerald-500" strokeWidth={1.5} />
             </div>
-
-            <h3 className="text-xl font-medium text-slate-900 tracking-tight mb-2">
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-2">
               No Documents Yet
             </h3>
-
-            <p className="text-sm text-slate-500 mb-6">
-              Get started by uploading your first PDF document to begin learning.
+            <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+              Get started by uploading your first PDF document to begin learning. Our AI will automatically generate flashcards and quizzes for you.
             </p>
-
             <button
-              onClick={() =>
-                setIsUploadModalOpen(true)
-              }
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 active:scale-[0.98]"
+              onClick={() => setIsUploadModalOpen(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 active:scale-[0.98]"
             >
-
-              <Plus
-                className="w-4 h-4"
-                strokeWidth={2.5}
-              />
-
+              <Plus className="w-5 h-5" strokeWidth={2.5} />
               Upload Document
-
             </button>
-
           </div>
-
         </div>
       );
     }
 
-    // Documents Grid
+    // Documents List
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pt-2">
         {documents.map((doc) => (
-
           <DocumentCard
             key={doc._id}
             document={doc}
             onDelete={handleDeleteRequest}
           />
-
         ))}
-
       </div>
     );
   };
@@ -300,54 +276,25 @@ const DocumentListPage = () => {
   // Main Return
   // ==========================================
   return (
+    <div className="max-w-7xl mx-auto relative z-10 space-y-6">
+      {/* Header */}
+      <PageHeader
+        title="Your Study Materials"
+        subtitle="Access your documents, flashcards, and practice quizzes"
+      >
+        {documents.length > 0 && (
+          <button
+            onClick={() => setIsUploadModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/20 active:scale-95"
+          >
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
+            Upload Document
+          </button>
+        )}
+      </PageHeader>
 
-    <div className="min-h-screen">
-
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-[size:16px_16px] opacity-30 pointer-events-none" />
-
-      <div className="relative max-w-7xl mx-auto">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-
-          <div>
-
-            <h1 className="text-2xl font-medium text-slate-900 tracking-tight mb-2">
-              My Documents
-            </h1>
-
-            <p className="text-slate-500 text-sm">
-              Manage and organize your learning materials
-            </p>
-
-          </div>
-
-          {/* Upload Button */}
-          {documents.length > 0 && (
-
-            <Button
-              onClick={() =>
-                setIsUploadModalOpen(true)
-              }
-            >
-
-              <Plus
-                className="w-4 h-4"
-                strokeWidth={2.5}
-              />
-
-              Upload Document
-
-            </Button>
-          )}
-
-        </div>
-
-        {/* Page Content */}
-        {renderContent()}
-
-      </div>
+      {/* Page Content */}
+      {renderContent()}
 
       {/* Upload Modal */}
       {isUploadModalOpen && (

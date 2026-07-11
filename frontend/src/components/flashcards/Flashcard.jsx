@@ -1,115 +1,248 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Star, RotateCcw } from "lucide-react";
 
-const Flashcard = ({ flashcard, onToggleStar }) => {
-    const [isFlipped, setIsFlipped] = useState(false);
+const Flashcard = React.memo(({ flashcard, onToggleStar, isFlipped, onFlip }) => {
+    const [isAnimating, setIsAnimating] = useState(false);
+    const [sparkleActive, setSparkleActive] = useState(false);
 
-    console.log("Flashcard rendered");
-    console.log(flashcard);
+    // Track flip changes to apply scaling bounce animation
+    useEffect(() => {
+        setIsAnimating(true);
+        const timer = setTimeout(() => setIsAnimating(false), 600);
+        return () => clearTimeout(timer);
+    }, [isFlipped]);
+
+    // Star sparkle animation trigger
+    useEffect(() => {
+        if (flashcard.isStarred) {
+            setSparkleActive(true);
+            const timer = setTimeout(() => setSparkleActive(false), 600);
+            return () => clearTimeout(timer);
+        }
+    }, [flashcard.isStarred]);
 
     const handleFlip = () => {
-        setIsFlipped(!isFlipped);
+        if (isAnimating) return;
+        onFlip(!isFlipped);
     };
 
-    return <div className="relative w-full h-72" style={{ perspective: '1000px' }}>
-        <div
-            className={`relative w-full h-full transition-transform duration-500 transform-gpu cursor-pointer`}
-            style={{
-                transformStyle: 'preserve-3d',
-                WebkitTransformStyle: 'preserve-3d',
-                transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
-            }}
+    // Determine difficulty label and badge color
+    const getDifficultyInfo = () => {
+        const diff = String(flashcard.difficulty || "medium").toLowerCase();
+        if (diff === "easy" || diff === "beginner") {
+            return { label: "Beginner", classes: "bg-green-50 text-green-700 border-green-200/80" };
+        }
+        if (diff === "hard" || diff === "advanced") {
+            return { label: "Advanced", classes: "bg-red-50 text-red-700 border-red-200/80" };
+        }
+        return { label: "Intermediate", classes: "bg-amber-50 text-amber-700 border-amber-200/80" };
+    };
+
+    const diffInfo = getDifficultyInfo();
+
+    return (
+        <div 
+            className="relative w-full h-[440px] sm:h-[480px] perspective-1200 outline-hidden"
             onClick={handleFlip}
+            tabIndex={0}
+            role="button"
+            aria-label={`Flashcard: ${isFlipped ? "Answer side" : "Question side"}. Press Space or click to flip.`}
+            onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleFlip();
+                }
+            }}
         >
-            {/* Front of the card (Question) */}
             <div
-                className="absolute inset-0 w-full h-full bg-white/80 backdrop-blur-xl border-2 border-slate-200/60 rounded-2xl shadow-xl shadow-slate-200/50 p-8 flex flex-col justify-between"
-                style={{
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    transform: 'rotateY(0deg)'
-                }}
+                className={`relative w-full h-full spring-flip-gpu preserve-3d cursor-pointer select-none
+                    ${isFlipped ? '[transform:rotateY(180deg)]' : '[transform:rotateY(0deg)]'}
+                    ${isAnimating ? 'scale-[1.03] shadow-2xl' : 'hover:scale-[1.01] hover:shadow-lg'}`}
             >
-                {/* Star Button */}
-                <div className="flex items-start justify-between">
-                    <div className='bg-slate-100 text-slate-600 rounded px-4 py-1 uppercase'>{flashcard?.difficulty}</div>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleStar(flashcard._id);
-                        }}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${flashcard.isStarred
-                            ? 'bg-linear-to-br from-amber-400 to-yellow-500 text-white shadow-lg shadow-amber-500/25'
-                            : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-amber-500'
+                {/* Front Side (Question) */}
+                <div
+                    className="absolute inset-0 w-full h-full bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 flex flex-col justify-between"
+                    style={{
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        transform: 'rotateY(0deg)'
+                    }}
+                >
+                    {/* Header Row: Difficulty Badge & Bookmark */}
+                    <div className="flex items-center justify-between relative z-10">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${diffInfo.classes} animate-pulse`}>
+                            {diffInfo.label}
+                        </span>
+                        
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleStar(flashcard._id);
+                            }}
+                            className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 outline-hidden ${
+                                flashcard.isStarred
+                                    ? 'bg-amber-100 text-amber-500'
+                                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-amber-500'
                             }`}
-                    >
-                        <Star
-                            className="w-4 h-4"
-                            strokeWidth={2}
-                            fill={flashcard.isStarred ? 'currentColor' : 'none'}
-                        />
-                    </button>
+                            aria-label={flashcard.isStarred ? "Remove Bookmark" : "Bookmark Flashcard"}
+                        >
+                            <Star className="w-5.5 h-5.5" strokeWidth={2} fill={flashcard.isStarred ? 'currentColor' : 'none'} />
+                            
+                            {sparkleActive && (
+                                <div className="absolute inset-0 pointer-events-none overflow-visible">
+                                    {[
+                                        { id: 1, x: '-22px', y: '-22px', delay: '0ms' },
+                                        { id: 2, x: '22px', y: '-22px', delay: '40ms' },
+                                        { id: 3, x: '-22px', y: '22px', delay: '80ms' },
+                                        { id: 4, x: '22px', y: '22px', delay: '120ms' },
+                                        { id: 5, x: '0px', y: '-32px', delay: '60ms' }
+                                    ].map((s) => (
+                                        <span
+                                            key={s.id}
+                                            className="absolute top-1/2 left-1/2 w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
+                                            style={{
+                                                '--x': s.x,
+                                                '--y': s.y,
+                                                animationDelay: s.delay,
+                                                transform: 'translate(-50%, -50%)',
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Question Center */}
+                    <div className="flex-1 flex items-center justify-center px-4 py-6">
+                        <p className="text-2xl sm:text-3xl font-semibold text-center text-slate-900 leading-relaxed font-display">
+                            {flashcard.question}
+                        </p>
+                    </div>
+
+                    {/* Footer Guide */}
+                    <div className="flex items-center justify-center gap-2 text-sm text-slate-400 font-medium">
+                        <RotateCcw className="w-4 h-4 text-slate-400" strokeWidth={2} />
+                        <span>Click or Press Space to reveal</span>
+                    </div>
                 </div>
 
-                {/* Question Content */}
-                <div className="flex-1 flex items-center justify-center px-4 py-6">
-                    <p className="text-lg font-semibold text-center text-slate-900 leading-relaxed">
-                        {flashcard.question}
-                    </p>
-                </div>
+                {/* Back Side (Answer) */}
+                <div
+                    className="absolute inset-0 w-full h-full bg-linear-to-br from-emerald-50 via-green-50 to-white border border-emerald-200/80 rounded-3xl p-6 sm:p-10 flex flex-col justify-between"
+                    style={{
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        transform: 'rotateY(180deg)'
+                    }}
+                >
+                    {/* Floating Success Badge */}
+                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-13 h-13 rounded-full bg-emerald-100 border-2 border-white flex items-center justify-center shadow-lg shadow-emerald-500/15 animate-badge-pulse">
+                        <span className="text-2xl" role="img" aria-label="success">✅</span>
+                    </div>
 
-                {/* Flip Indicator */}
-                <div className="flex items-center justify-center gap-2 text-xs text-slate-400 font-medium">
-                    <RotateCcw className="w-3.5 h-3.5" strokeWidth={2} />
-                    <span>Click to reveal answer</span>
-                </div>
-            </div>
+                    {/* Header Row: Difficulty & Star */}
+                    <div className="flex items-center justify-between relative z-10">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${diffInfo.classes}`}>
+                            {diffInfo.label}
+                        </span>
+                        
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleStar(flashcard._id);
+                            }}
+                            className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 outline-hidden ${
+                                flashcard.isStarred
+                                    ? 'bg-amber-100 text-amber-500'
+                                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-amber-500'
+                            }`}
+                            aria-label={flashcard.isStarred ? "Remove Bookmark" : "Bookmark Flashcard"}
+                        >
+                            <Star className="w-5.5 h-5.5" strokeWidth={2} fill={flashcard.isStarred ? 'currentColor' : 'none'} />
+                            
+                            {sparkleActive && (
+                                <div className="absolute inset-0 pointer-events-none overflow-visible">
+                                    {[
+                                        { id: 1, x: '-22px', y: '-22px', delay: '0ms' },
+                                        { id: 2, x: '22px', y: '-22px', delay: '40ms' },
+                                        { id: 3, x: '-22px', y: '22px', delay: '80ms' },
+                                        { id: 4, x: '22px', y: '22px', delay: '120ms' },
+                                        { id: 5, x: '0px', y: '-32px', delay: '60ms' }
+                                    ].map((s) => (
+                                        <span
+                                            key={s.id}
+                                            className="absolute top-1/2 left-1/2 w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
+                                            style={{
+                                                '--x': s.x,
+                                                '--y': s.y,
+                                                animationDelay: s.delay,
+                                                transform: 'translate(-50%, -50%)',
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </button>
+                    </div>
 
-            {/* Back of the card (Answer) */}
-            <div
-                className="absolute inset-0 w-full h-full bg-linear-to-br from-emerald-500 to-teal-500 border-2 border-emerald-400/60 rounded-2xl shadow-xl shadow-emerald-500/30 p-8 flex flex-col justify-between"
-                style={{
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    transform: 'rotateY(180deg)'
-                }}
-            >
-                {/* Star Button */}
-                <div className="flex justify-end">
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleStar(flashcard._id);
-                        }}
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                            flashcard.isStarred
-                                ? 'bg-white/30 backdrop-blur-sm text-white border border-white/40'
-                                : 'bg-white/20 backdrop-blur-sm text-white/70 hover:bg-white/30 hover:text-white border border-white/20'
-                        }`}
-                    >
-                        <Star
-                            className="w-4 h-4"
-                            strokeWidth={2}
-                            fill={flashcard.isStarred ? 'currentColor' : 'none'}
-                        />
-                    </button>
-                </div>
+                    {/* Scrollable Answer / Explanations / Memory Tips */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar my-4 pr-1">
+                        <div 
+                            className={`transition-all duration-500 ease-out transform flex flex-col items-center justify-center min-h-full
+                                ${isFlipped ? 'opacity-100 translate-y-0 scale-100 delay-150' : 'opacity-0 translate-y-4 scale-95'}`}
+                        >
+                            <span className="text-xs font-bold tracking-widest text-emerald-600 uppercase mb-2">
+                                ✅ Correct Answer
+                            </span>
 
-                {/* Answer Content */}
-                <div className="flex-1 flex items-center justify-center px-4 py-6">
-                    <p className="text-base text-white text-center leading-relaxed font-medium">
-                        {flashcard.answer}
-                    </p>
-                </div>
+                            <p className="text-3xl sm:text-4xl font-bold text-center text-slate-900 leading-tight mb-6 px-2 font-display">
+                                {flashcard.answer}
+                            </p>
 
-                {/* Flip Indicator */}
-                <div className="flex items-center justify-center gap-2 text-xs text-white/70 font-medium">
-                    <RotateCcw className="w-3.5 h-3.5" strokeWidth={2} />
-                    <span>Click to see question</span>
+                            <div className="w-full space-y-3.5">
+                                {/* Explanation Card */}
+                                {flashcard.explanation && (
+                                    <div className="bg-emerald-100/70 border border-emerald-200/50 rounded-xl p-4 sm:p-5 flex gap-3 text-left">
+                                        <span className="text-xl shrink-0 select-none">💡</span>
+                                        <div className="space-y-1">
+                                            <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-widest">
+                                                Why?
+                                            </h4>
+                                            <p className="text-sm sm:text-base text-emerald-900 leading-relaxed font-semibold">
+                                                {flashcard.explanation}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Memory Trick Card */}
+                                {flashcard.memoryTip && (
+                                    <div className="bg-blue-50 border border-blue-200/50 rounded-xl p-4 sm:p-5 flex gap-3 text-left">
+                                        <span className="text-xl shrink-0 select-none">🧠</span>
+                                        <div className="space-y-1">
+                                            <h4 className="text-xs font-bold text-blue-950 uppercase tracking-widest">
+                                                Memory Trick
+                                            </h4>
+                                            <p className="text-sm sm:text-base text-blue-900 leading-relaxed font-semibold">
+                                                {flashcard.memoryTip}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Footer Guide */}
+                    <div className="flex items-center justify-center gap-2 text-sm text-emerald-600/80 font-bold pt-2 border-t border-emerald-100/50">
+                        <RotateCcw className="w-4 h-4 text-emerald-600/80" strokeWidth={2.5} />
+                        <span>Click or Press Space to flip back</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>;
-};
+    );
+});
 
 export default Flashcard;

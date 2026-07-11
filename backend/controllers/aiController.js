@@ -11,7 +11,12 @@ import crypto from 'crypto';
 
 export const generateFlashcards = async (req, res, next) => {
   try {
-    const { documentId, count = 10 } = req.body;
+    const { 
+      documentId, 
+      count = "10",
+      studyMode = "Balanced Study",
+      difficulty = "Intermediate"
+    } = req.body;
 
     if (!documentId) {
       return res.status(400).json({
@@ -35,18 +40,37 @@ export const generateFlashcards = async (req, res, next) => {
       });
     }
 
-    const cards = await geminiService.generateFlashcards(
+    // Validation fallbacks
+    const validatedCount = ["5", "10", "15", "20"].includes(String(count).toLowerCase()) ? count : "10";
+    const validatedMode = ["Quick Revision", "Balanced Study", "Deep Learning", "Exam Preparation"].includes(studyMode) ? studyMode : "Balanced Study";
+    const validatedDiff = ["Beginner", "Intermediate", "Advanced"].includes(difficulty) ? difficulty : "Intermediate";
+
+    const result = await geminiService.generateFlashcards(
       document.extractedText,
-      parseInt(count)
+      validatedCount,
+      {
+        studyMode: validatedMode,
+        difficulty: validatedDiff
+      }
     );
 
     const flashcardSet = await Flashcard.create({
       documentId,
       userId: req.user._id,
-      cards: cards.map((card) => ({
+      settings: {
+        studyMode: validatedMode,
+        flashcardCount: String(validatedCount),
+        difficulty: validatedDiff,
+        includeExplanation: true,
+        includeMemoryTips: true
+      },
+      insights: result.insights,
+      cards: result.cards.map((card) => ({
         question: card.question,
         answer: card.answer,
-        difficulty: card.difficulty,
+        explanation: card.explanation || "",
+        memoryTip: card.memoryTip || "",
+        difficulty: card.difficulty || "medium",
         reviewCount: 0,
         isStarred: false,
       })),

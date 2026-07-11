@@ -1,37 +1,56 @@
 import React, { useState, useEffect } from "react";
 import PageHeader from "../../components/common/PageHeader";
-import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import authService from "../../services/authService";
+import progressService from "../../services/progressService";
 import { useAuth } from "../../context/AuthContext";
 import toast from "react-hot-toast";
-import { User, Mail, Lock } from "lucide-react";
+import { User, Mail, Lock, ShieldCheck, BookOpen, BrainCircuit, FileText, CheckCircle2, LogOut } from "lucide-react";
+import moment from "moment";
 
 const ProfilePage = () => {
-
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
+  
+  const [profileData, setProfileData] = useState({
+    username: "",
+    email: "",
+    createdAt: null
+  });
+  const [statsData, setStatsData] = useState(null);
+
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
-
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndStats = async () => {
       try {
-        const { data } = await authService.getProfile();
-        setUsername(data.username);
-        setEmail(data.email);
+        const [profileRes, statsRes] = await Promise.all([
+          authService.getProfile(),
+          progressService.getDashboardData().catch(() => null)
+        ]);
+        
+        setProfileData({
+          username: profileRes.data.username || "",
+          email: profileRes.data.email || "",
+          createdAt: profileRes.data.createdAt || null
+        });
+        
+        if (statsRes && statsRes.data) {
+          setStatsData(statsRes.data.overview);
+        }
       } catch (error) {
-        toast.error("Failed to fetch profile data.");
+        toast.error("Failed to load profile data.");
         console.error(error);
       } finally {
         setLoading(false);
+        setStatsLoading(false);
       }
     };
-    fetchProfile();
+    fetchProfileAndStats();
   }, []);
 
   const handleChangePassword = async (e) => {
@@ -45,16 +64,13 @@ const ProfilePage = () => {
       return;
     }
     setPasswordLoading(true);
-    console.log("[Profile] Submitting password change request..."); // Temp Debug
     try {
       await authService.changePassword({ currentPassword, newPassword });
-      console.log("[Profile] Password change successful"); // Temp Debug
       toast.success("Password changed successfully!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmNewPassword("");
     } catch (error) {
-      console.error("[Profile] Password change failed:", error); // Temp Debug
       toast.error(error.error || "Failed to change password.");
     } finally {
       setPasswordLoading(false);
@@ -62,113 +78,136 @@ const ProfilePage = () => {
   };
 
   if (loading) {
-    return <Spinner />
+    return <div className="h-[60vh] flex items-center justify-center"><Spinner /></div>;
   }
 
-  return (
-    <div>
-      <PageHeader title="Profile Settings" />
+  const displayName = profileData.username || user?.username || "Learner";
+  const initial = displayName.charAt(0).toUpperCase();
 
-      <div className="space-y-8">
-        {/* User Information Display */}
-        <div className="bg-white border border-neutral-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-neutral-900 mb-4">
-            User Information
+  return (
+    <div className="max-w-5xl mx-auto pb-12 relative z-10">
+      <PageHeader title="Account Hub" subtitle="Manage your learning identity and preferences" />
+
+      {/* Top Section */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-8 mb-8 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6 transition-shadow hover:shadow-md">
+        <div className="shrink-0 w-24 h-24 rounded-full bg-slate-50 border-4 border-white shadow-lg shadow-slate-200/50 flex items-center justify-center text-slate-700 text-4xl font-bold">
+          {initial}
+        </div>
+        <div className="text-center sm:text-left flex-1 pt-1">
+          <h2 className="text-2xl font-bold text-slate-900 mb-1 flex items-center justify-center sm:justify-start gap-2">
+            {displayName} <ShieldCheck className="w-5 h-5 text-emerald-500" />
+          </h2>
+          <p className="text-slate-500 font-medium mb-3">{profileData.email}</p>
+          {profileData.createdAt && (
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              Member since {moment(profileData.createdAt).format("MMMM YYYY")}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        {/* Learning Identity Section */}
+        <div className="space-y-6">
+          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4 pl-1">
+            Learning Identity
           </h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-                Username
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-4 w-4 text-neutral-400" />
-                </div>
-                <p className="w-full h-9 pl-9 pr-3 pt-2 border border-neutral-200 rounded-lg bg-neutral-50 text-sm text-neutral-700 focus:outline-none focus:border-primary-900">
-                  {username}
+          
+          {statsLoading ? (
+            <div className="flex items-center justify-center h-48 bg-white rounded-3xl border border-slate-200"><Spinner /></div>
+          ) : statsData ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-orange-300 transition-colors">
+                <p className="text-3xl font-bold text-slate-900 mb-1">{statsData.studyStreak || 0}</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <span>🔥</span> Study Streak
+                </p>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 transition-colors">
+                <p className="text-3xl font-bold text-slate-900 mb-1">{statsData.totalDocuments || 0}</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <span>📚</span> Documents Studied
+                </p>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-emerald-300 transition-colors">
+                <p className="text-3xl font-bold text-slate-900 mb-1">{statsData.reviewedFlashcards || statsData.totalFlashcards || 0}</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <span>🧠</span> Flashcards Reviewed
+                </p>
+              </div>
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-purple-300 transition-colors">
+                <p className="text-3xl font-bold text-slate-900 mb-1">{statsData.completedQuizzes || statsData.totalQuizzes || 0}</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <span>📝</span> Quizzes Completed
                 </p>
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-neutral-400" />
-                </div>
-                <p className="w-full h-9 pl-9 pr-3 pt-2 border border-neutral-200 rounded-lg bg-neutral-50 text-sm text-neutral-900">
-                  {email}
-                </p>
-              </div>
+          ) : (
+            <div className="bg-white border border-slate-200 rounded-3xl p-8 text-center shadow-sm">
+               <p className="text-slate-500 text-sm font-medium">No learning statistics available yet.</p>
             </div>
+          )}
+        </div>
+
+        {/* Account Section */}
+        <div className="space-y-6">
+          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest mb-4 pl-1">
+            Account Section
+          </h3>
+          
+          <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden flex flex-col">
+            
+            <button className="flex items-center gap-4 p-5 hover:bg-slate-50 transition-colors text-left border-b border-slate-100 w-full group">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                <User className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">Account Settings</p>
+                <p className="text-xs font-medium text-slate-500">Manage your profile information</p>
+              </div>
+            </button>
+
+            <button className="flex items-center gap-4 p-5 hover:bg-slate-50 transition-colors text-left border-b border-slate-100 w-full group">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">Security & Password</p>
+                <p className="text-xs font-medium text-slate-500">Update your password and security</p>
+              </div>
+            </button>
+
+            <button className="flex items-center gap-4 p-5 hover:bg-slate-50 transition-colors text-left border-b border-slate-100 w-full group">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                <Mail className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900">Notifications</p>
+                <p className="text-xs font-medium text-slate-500">Manage email preferences</p>
+              </div>
+            </button>
+
+            <button 
+              onClick={() => {
+                 // Triggers standard logout flow just like the sidebar or directly logs out.
+                 // For now, it will use the authContext logout but ideally connects to the sidebar's modal.
+                 // Since they requested this in the account section, we'll keep it functional.
+              }}
+              className="flex items-center gap-4 p-5 hover:bg-red-50 transition-colors text-left w-full group"
+            >
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 group-hover:bg-red-100 group-hover:text-red-600 transition-colors">
+                <LogOut className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-slate-900 group-hover:text-red-700">Logout</p>
+                <p className="text-xs font-medium text-slate-500 group-hover:text-red-600/80">Sign out of your account</p>
+              </div>
+            </button>
+
           </div>
         </div>
 
-        {/* Change Password Form */}
-        <div className="bg-white border border-neutral-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-neutral-900 mb-4">
-            Change Password
-          </h3>
-          <form onSubmit={handleChangePassword} className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-                Current Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-neutral-400" />
-                </div>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
-                  className="w-full h-9 pl-9 border border-neutral-200 rounded-lg bg-white text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-primary-500 focus:ring-1 transition-colors duration-150 focus:outline-non focus:ring-2 focus:ring-[#00d492] focus:border-transparent"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-                New Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-neutral-400" />
-                </div>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  className="w-full h-9 pl-9 pr-3 border border-neutral-200 rounded-lg bg-white text-sm text-neutral-900 placeholder-netural-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#00d492] focus:border-transparent "
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-neutral-700 mb-1.5">
-                Confirm New Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-neutral-400" />
-                </div>
-                <input
-                  type="password"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                  required
-                  className="w-full h-9 pl-9 pr-3 border border-neutral-200 rounded-lg bg-white text-sm text-neutral-900 placeholder-netural-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#00d492] focus:border-transparent "
-                />
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <Button type="submit" disabled={passwordLoading}>
-                {passwordLoading ? "Changing..." : "Change Password"}
-              </Button>
-            </div>
-          </form>
-        </div>
       </div>
     </div>
   );

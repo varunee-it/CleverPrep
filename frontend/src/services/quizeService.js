@@ -1,4 +1,4 @@
- import axiosInstance from "../utils/axioslnstance";
+import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS } from "../utils/apiPaths";
 
 // ==========================================
@@ -100,6 +100,25 @@ const deleteQuiz = async (quizId) => {
 };
 
 // ==========================================
+// Retake Quiz (Reset answers)
+// ==========================================
+const retakeQuiz = async (quizId) => {
+  try {
+    const response = await axiosInstance.post(
+      `/quizzes/${quizId}/retake`
+    );
+
+    return response.data;
+  } catch (error) {
+    throw (
+      error.response?.data || {
+        message: "Failed to reset quiz",
+      }
+    );
+  }
+};
+
+// ==========================================
 // Export Quiz Services
 // ==========================================
 const quizService = {
@@ -108,6 +127,7 @@ const quizService = {
   submitQuiz,
   getQuizResults,
   deleteQuiz,
+  retakeQuiz,
 };
 
 export default quizService;
