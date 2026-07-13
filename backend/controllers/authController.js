@@ -115,37 +115,64 @@ export const getProfile= async (req, res,next) => {
     }
 };
 
-export const updateProfile= async (req, res,next) => {
-    try{
-        const {username,email,profileImage} = req.body;
-        const user = await User.findByIdAndUpdate(req.user._id);
-      if(username){
-        user.username = username;
-      }
-      if(email){
-        user.email = email;
-      }
-      if(profileImage){
-        user.profileImage = profileImage;
-      }
-      await user.save();
-      res.status(200).json({
-          
-        success:true,
-        data:{
-            id:user._id,
-            username:user.username,
-            email:user.email,
-            profileImage:user.profileImage, 
-        },
-        message:"profile updated",
-      });
-    }catch(error){
+export const updateProfile = async (req, res, next) => {
+    try {
+        const { username, email, profileImage } = req.body;
+        
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: "User not found",
+                statusCode: 404
+            });
+        }
+
+        // Validate username uniqueness
+        if (username && username !== user.username) {
+            const existingUsername = await User.findOne({ username });
+            if (existingUsername) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Username is already taken",
+                    statusCode: 400
+                });
+            }
+            user.username = username;
+        }
+
+        // Validate email uniqueness
+        if (email && email !== user.email) {
+            const existingEmail = await User.findOne({ email });
+            if (existingEmail) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Email is already taken",
+                    statusCode: 400
+                });
+            }
+            user.email = email;
+        }
+
+        if (profileImage) {
+            user.profileImage = profileImage;
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            data: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                profileImage: user.profileImage, 
+            },
+            message: "Profile updated successfully",
+        });
+    } catch (error) {
         next(error);
     }
-
-    
-    
 };
 export const logout = async (req, res,next) => {
     

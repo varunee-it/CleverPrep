@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import documentService from '../../services/documentService';
 import Spinner from '../../components/common/Spinner';
 import toast from 'react-hot-toast';
@@ -14,15 +14,31 @@ import PodcastManager from '../../components/podcast/PodcastManager';
 
 const DocumentDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const getInitialTab = () => {
     const queryParams = new URLSearchParams(window.location.search);
     const tab = queryParams.get('tab');
-    return tab || 'Content';
+    return tab || sessionStorage.getItem(`doc_tab_${id}`) || 'Content';
   };
   const [activeTab, setActiveTab] = useState(getInitialTab());
+
+  const handleBack = () => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+    } else if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate("/documents");
+    }
+  };
+
+  useEffect(() => {
+    sessionStorage.setItem(`doc_tab_${id}`, activeTab);
+  }, [activeTab, id]);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
@@ -82,13 +98,17 @@ const DocumentDetailPage = () => {
   ];
 
   return (
-    <div className="h-[calc(100vh-6rem)] flex flex-col -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 lg:-mx-8 lg:-mt-8">
+    <div className={`flex flex-col -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 lg:-mx-8 lg:-mt-8 ${activeTab === 'Content' ? 'h-[calc(100vh-6rem)] overflow-hidden' : 'min-h-[calc(100vh-6rem)]'}`}>
       {/* Workspace Header */}
       <div className="flex-none bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between z-10 shadow-sm">
         <div className="flex items-center gap-3 overflow-hidden">
-          <Link to="/documents" className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors shrink-0">
+          <button 
+            onClick={handleBack} 
+            className="p-2 -ml-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors shrink-0 cursor-pointer"
+            title="Go Back"
+          >
             <ArrowLeft size={20} />
-          </Link>
+          </button>
           <div className="flex items-center gap-3 overflow-hidden">
             <h1 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
               {document.data.title}
@@ -136,7 +156,7 @@ const DocumentDetailPage = () => {
       </div>
 
       {/* Main Workspace Area */}
-      <div className="flex-1 overflow-hidden flex flex-col bg-slate-50/50">
+      <div className={`flex-1 flex flex-col bg-slate-50/50 ${activeTab === 'Content' ? 'overflow-hidden' : ''}`}>
         
         {/* Content Tab (Full Width PDF) */}
         {activeTab === 'Content' && (
@@ -159,7 +179,7 @@ const DocumentDetailPage = () => {
         {/* Other Study Tools */}
         {activeTab !== 'Content' && (
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
-            <div className="h-full w-full max-w-5xl mx-auto">
+            <div className="w-full max-w-5xl mx-auto">
               {activeTab === 'Chat' && <ChatInterface />}
               {activeTab === 'Summary' && (
                 <ErrorBoundary>

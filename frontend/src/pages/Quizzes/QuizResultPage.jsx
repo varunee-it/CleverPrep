@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -21,11 +21,27 @@ import toast from 'react-hot-toast';
 const QuizResultPage = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isReviewing, setIsReviewing] = useState(false);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [showRetakeModal, setShowRetakeModal] = useState(false);
+
+  const handleBack = (e) => {
+    e.preventDefault();
+    const quiz = results?.data?.quiz;
+    const docId = quiz?.document?._id || quiz?.documentId || (quiz?.document && typeof quiz.document === 'object' ? quiz.document._id : quiz?.document);
+    if (location.state?.from) {
+      navigate(location.state.from);
+    } else if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else if (docId) {
+      navigate(`/documents/${docId}?tab=Quizzes`);
+    } else {
+      navigate('/documents');
+    }
+  };
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -399,13 +415,13 @@ const QuizResultPage = () => {
       {/* Back Button */}
       {!isReviewing && (
         <div className="mb-6">
-          <Link
-            to={`/documents/${quiz.document?._id || quiz.documentId}`}
-            className="group inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors duration-200"
+          <button
+            onClick={handleBack}
+            className="group inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-emerald-600 transition-colors duration-200 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" strokeWidth={2} />
             Back to Document
-          </Link>
+          </button>
         </div>
       )}
 

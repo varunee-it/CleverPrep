@@ -83,7 +83,7 @@ const Sidebar = ({
         </div>
 
         {/* Navigation Links */}
-        <div className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+        <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2">
           {navLinks.map((link) => (
             <NavLink
               key={link.to}
@@ -95,10 +95,10 @@ const Sidebar = ({
                 }
               }}
               className={({ isActive }) =>
-                `group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-3'} py-2 text-sm font-medium rounded-lg transition-colors duration-150 ${
+                `group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4'} py-3 text-sm font-medium rounded-xl transition-all duration-200 relative ${
                   isActive
-                    ? "bg-emerald-50/60 text-emerald-700"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100/50"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:translate-x-0.5"
                 }`
               }
               title={isSidebarCollapsed ? link.text : ""}
@@ -106,17 +106,22 @@ const Sidebar = ({
               {({ isActive }) => (
                 <>
                   <link.icon
-                    size={18}
-                    strokeWidth={isActive ? 2.5 : 2}
-                    className={`shrink-0 transition-transform duration-150`}
+                    size={20}
+                    strokeWidth={isActive ? 2.25 : 1.75}
+                    className={`shrink-0 transition-transform duration-200 ${
+                      isActive ? "text-emerald-600 scale-105" : "text-slate-400 group-hover:text-slate-600 group-hover:scale-105"
+                    }`}
                   />
                   <span
-                    className={`ml-3 whitespace-nowrap transition-all duration-200 ${
+                    className={`ml-3.5 whitespace-nowrap font-medium transition-all duration-200 ${
                       isSidebarCollapsed ? "md:hidden md:opacity-0 md:w-0" : "opacity-100"
                     }`}
                   >
                     {link.text}
                   </span>
+                  {isActive && !isSidebarCollapsed && (
+                    <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  )}
                 </>
               )}
             </NavLink>
@@ -124,19 +129,19 @@ const Sidebar = ({
         </div>
 
         {/* Bottom Section (Logout) */}
-        <div className="p-2 border-t border-slate-200/60">
+        <div className="p-3 border-t border-slate-100">
           <button
             onClick={() => setIsLogoutModalOpen(true)}
-            className={`group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-3'} py-2 w-full text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-lg transition-all duration-200 border border-transparent`}
+            className={`group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4'} py-3 w-full text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100/50 rounded-xl transition-all duration-200 border border-transparent hover:translate-x-0.5`}
             title={isSidebarCollapsed ? "Logout" : ""}
           >
             <LogOut
-              size={18}
-              strokeWidth={2}
-              className="shrink-0 transition-transform duration-200 group-hover:text-red-600"
+              size={20}
+              strokeWidth={1.75}
+              className="shrink-0 transition-transform duration-200 group-hover:text-red-600 group-hover:scale-105"
             />
             <span
-              className={`ml-3 whitespace-nowrap transition-all duration-200 ${
+              className={`ml-3.5 whitespace-nowrap font-medium transition-all duration-200 ${
                 isSidebarCollapsed ? "md:hidden md:opacity-0 md:w-0" : "opacity-100"
               }`}
             >

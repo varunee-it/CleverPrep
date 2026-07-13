@@ -554,10 +554,10 @@ const FlashcardManager = ({ documentId, onTabChange }) => {
                     <div className="pt-6">
                         <button
                             onClick={() => setSelectedSet(null)}
-                            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-700 font-semibold text-sm transition-colors outline-hidden"
+                            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-700 font-semibold text-sm transition-colors outline-hidden cursor-pointer"
                         >
                             <ArrowLeft className="w-4 h-4" />
-                            Return to Library
+                            Return to Flashcard Sets
                         </button>
                     </div>
                 </div>
@@ -600,10 +600,10 @@ const FlashcardManager = ({ documentId, onTabChange }) => {
                 <div className="flex items-center justify-between">
                     <button
                         onClick={() => setSelectedSet(null)}
-                        className="group inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors outline-hidden"
+                        className="group inline-flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors outline-hidden cursor-pointer"
                     >
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
-                        Back to Library
+                        Back to Flashcard Sets
                     </button>
                 </div>
 
@@ -901,7 +901,7 @@ const FlashcardManager = ({ documentId, onTabChange }) => {
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-6 max-h-[80vh] overflow-y-auto custom-scrollbar pr-1 select-none animate-in fade-in duration-300">
+                    <div className="space-y-6 select-none animate-in fade-in duration-300">
                         <p className="text-sm text-slate-500 font-semibold">
                             Customize how you'd like your AI flashcards to be generated.
                         </p>

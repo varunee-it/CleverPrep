@@ -254,8 +254,10 @@ export const getChapterAudio = async (req, res, next) => {
         // Extract voices with backward compatibility
         const teacherVoice = podcast.settings?.teacherVoice || podcast.settings?.voice || 'Sarah';
         const studentVoice = podcast.settings?.studentVoice || 'Female';
+        const accent = podcast.settings?.accent || 'Indian';
+        const language = podcast.settings?.language || 'English';
 
-        const audioFileName = `${id}_chapter_${index}_${teacherVoice}_${studentVoice}.mp3`;
+        const audioFileName = `${id}_chapter_${index}_${teacherVoice}_${studentVoice}_${accent}_${language}.mp3`;
         const audioPath = path.join(audioDir, audioFileName);
 
         if (fs.existsSync(audioPath)) {
@@ -354,7 +356,9 @@ export const retryChapterAudio = async (req, res, next) => {
         // Spawn regeneration in the background
         const teacherVoice = podcast.settings?.teacherVoice || podcast.settings?.voice || 'Sarah';
         const studentVoice = podcast.settings?.studentVoice || 'Female';
-        const audioFileName = `${podcast._id}_chapter_${index}_${teacherVoice}_${studentVoice}.mp3`;
+        const accent = podcast.settings?.accent || 'Indian';
+        const language = podcast.settings?.language || 'English';
+        const audioFileName = `${podcast._id}_chapter_${index}_${teacherVoice}_${studentVoice}_${accent}_${language}.mp3`;
         const audioPath = import('path').then(path => path.join(process.cwd(), 'uploads', 'podcasts', audioFileName));
         
         import('../utils/ttsService.js').then(async (ttsService) => {
@@ -365,7 +369,12 @@ export const retryChapterAudio = async (req, res, next) => {
                     teacherVoice, 
                     studentVoice, 
                     resolvedPath,
-                    { podcastId: podcast._id.toString(), chapterIndex: index }
+                    { 
+                        podcastId: podcast._id.toString(), 
+                        chapterIndex: index,
+                        accent,
+                        language
+                    }
                 );
                 await Podcast.updateOne(
                     { _id: podcast._id },

@@ -1,8 +1,9 @@
 import moment from 'moment';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Trash2, Award, BarChart3, Play } from 'lucide-react';
 
 const QuizCard = ({ quiz, onDelete }) => {
+    const location = useLocation();
     return (
         <div className="group relative bg-white border-2 border-slate-200 hover:border-emerald-300 rounded-2xl p-4 transition-all duration-200 hover:shadow-lg hover:shadow-emerald-500/10 flex flex-col justify-between">
             <button
@@ -51,15 +52,15 @@ const QuizCard = ({ quiz, onDelete }) => {
             {/* Action Button */}
             <div className="mt-2 pt-4 border-t border-slate-100">
                 {quiz.userAnswers?.length > 0 ? (
-                    <Link to={`/quizzes/${quiz._id}/results`}>
-                        <button className="group/btn w-full inline-flex items-center justify-center gap-2 h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-xl transition-all duration-200 active:scale-95 cursor-pointer">
+                    <Link to={`/quizzes/${quiz._id}/results`} state={{ from: location.pathname + location.search }}>
+                        <button className="group/btn w-full inline-flex items-center justify-center gap-2 h-12 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all duration-200 active:scale-95 cursor-pointer">
                             <BarChart3 className="w-4 h-4" strokeWidth={2.5} />
                             View Results
                         </button>
                     </Link>
                 ) : (
-                    <Link to={`/quizzes/${quiz._id}`}>
-                        <button className="group/btn relative w-full h-11 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 active:scale-95 overflow-hidden">
+                    <Link to={`/quizzes/${quiz._id}`} state={{ from: location.pathname + location.search }}>
+                        <button className="group/btn relative w-full h-12 bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-sm rounded-xl transition-all duration-200 shadow-lg shadow-emerald-500/25 active:scale-95 overflow-hidden">
                             <span className="relative z-10 flex items-center justify-center gap-2">
                                 <Play className="w-4 h-4" strokeWidth={2.5} />
                                 Start Quiz

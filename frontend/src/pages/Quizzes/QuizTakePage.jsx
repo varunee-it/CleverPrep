@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 import quizService from '../../services/quizeService.js';
 import PageHeader from '../../components/common/PageHeader.jsx';
@@ -12,12 +12,27 @@ import Modal from '../../components/common/Modal.jsx';
 const QuizTakePage = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+
+  const handleBack = (e) => {
+    e.preventDefault();
+    const docId = quiz?.documentId?._id || quiz?.documentId;
+    if (location.state?.from) {
+      navigate(location.state.from);
+    } else if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else if (docId) {
+      navigate(`/documents/${docId}?tab=Quizzes`);
+    } else {
+      navigate('/documents');
+    }
+  };
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -125,6 +140,15 @@ const QuizTakePage = () => {
 
   return (
     <div className="max-w-3xl mx-auto select-none">
+      <div className="mb-6">
+        <button
+          onClick={handleBack}
+          className="group inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors duration-200 cursor-pointer"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform duration-200" />
+          Back to Document
+        </button>
+      </div>
       <PageHeader title={quiz.title || 'Take Quiz'} />
 
       {/* Progress Section */}

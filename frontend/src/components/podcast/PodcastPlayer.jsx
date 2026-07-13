@@ -34,7 +34,6 @@ const PodcastPlayer = ({ podcast: initialPodcast }) => {
   const [explainLoading, setExplainLoading] = useState(false);
 
   const audioRef = useRef(null);
-  const captionsRef = useRef(null);
   
   const [waveformHeights, setWaveformHeights] = useState([...Array(30)].map(() => 4));
 
@@ -402,15 +401,7 @@ const PodcastPlayer = ({ podcast: initialPodcast }) => {
     }
   };
 
-  // Auto-scroll transcript smoothly to the active sentence
-  useEffect(() => {
-      if (captionsRef.current) {
-          const lastChild = captionsRef.current.lastElementChild;
-          if (lastChild) {
-              lastChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          }
-      }
-  }, [activeSegmentIndex]);
+
 
   // handleEnded and goToNextChapter moved up
 
@@ -1070,46 +1061,7 @@ const PodcastPlayer = ({ podcast: initialPodcast }) => {
 
           {/* Better Study Dashboard */}
           <div className="flex flex-col gap-4 w-full">
-              {/* Full Transcript Collapsible Panel */}
-              <details className="group bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden select-none">
-                  <summary className="font-bold text-slate-700 flex items-center gap-3 p-5 cursor-pointer hover:bg-slate-50 transition-colors list-none">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">📜</div>
-                      Full Transcript
-                      <span className="text-xs font-semibold text-slate-400 ml-2">(Click to expand)</span>
-                      <ChevronRight size={18} className="ml-auto text-slate-400 group-open:rotate-90 transition-transform" />
-                  </summary>
-                  <div className="p-6 pt-0 border-t border-slate-100 max-h-[400px] overflow-y-auto custom-scrollbar space-y-4">
-                      {segmentTimings.map((seg, idx) => {
-                          const isTeacher = seg.speaker.includes('👩') || seg.speaker.includes('Sarah') || seg.speaker.includes('Alex') || seg.speaker.includes('Mentor') || seg.speaker.includes('Coach');
-                          const displaySpeaker = isTeacher ? `👩 ${resolvedTeacherVoice}` : `👤 ${resolvedStudentName}`;
-                          const isCurrent = idx === activeSegmentIndex;
 
-                          return (
-                              <div 
-                                  key={idx}
-                                  onClick={() => {
-                                      if (audioRef.current) {
-                                          audioRef.current.currentTime = seg.start;
-                                          setProgress(seg.start);
-                                      }
-                                  }}
-                                  className={`p-3 rounded-xl border transition-all duration-200 cursor-pointer flex flex-col gap-1 text-left ${
-                                      isCurrent
-                                          ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-bold shadow-xs'
-                                          : 'bg-slate-50/50 border-slate-100 hover:bg-slate-50 hover:border-slate-200 text-slate-700'
-                                  }`}
-                              >
-                                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                      {displaySpeaker}
-                                  </span>
-                                  <p className="text-sm font-semibold leading-relaxed">
-                                      {seg.text}
-                                  </p>
-                              </div>
-                          );
-                      })}
-                  </div>
-              </details>
               <h3 className="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2 px-2">
                   <Sparkles size={24} className="text-emerald-500" /> Study Dashboard
               </h3>

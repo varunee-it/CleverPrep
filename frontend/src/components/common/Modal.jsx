@@ -12,7 +12,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                     onClick={onClose}
                 ></div>
 
-                <div className="relative w-full max-w-lg bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-2xl shadow-slate-900/20 p-8 z-10 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <div className="relative w-full max-w-lg max-h-[calc(100vh-4rem)] bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-2xl shadow-slate-900/20 p-6 sm:p-8 z-10 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <button
                         onClick={onClose}
                         className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors duration-200"
@@ -20,13 +20,15 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                         <X className="w-5 h-5" strokeWidth={2} />
                     </button>
 
-                    <div className="mb-6 pr-8">
+                    <div className="mb-6 pr-8 shrink-0">
                         <h3 className="text-xl font-medium text-slate-900 tracking-tight">
                             {title}
                         </h3>
                     </div>
 
-                    <div>{children}</div>
+                    <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                        {children}
+                    </div>
                 </div>
             </div>
         </div>

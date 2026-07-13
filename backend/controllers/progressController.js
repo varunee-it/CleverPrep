@@ -99,10 +99,6 @@ export const getDashboard = async (req, res, next) => {
       .populate('documentId', 'title')
       .select('title completedAt score');
 
-    // Dummy streak logic
-    const studyStreak =
-      Math.floor(Math.random() * 7) + 1;
-
     // =========================
     // Final response
     // =========================
@@ -118,7 +114,6 @@ export const getDashboard = async (req, res, next) => {
           totalQuizzes,
           completedQuizzes,
           averageScore,
-          studyStreak,
         },
 
         recentActivity: {

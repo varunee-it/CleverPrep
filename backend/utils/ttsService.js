@@ -20,6 +20,24 @@ const EDGE_VOICE_IDS = {
   'Student Male': 'en-US-SteffanNeural'
 };
 
+const EDGE_IN_VOICE_IDS = {
+  'Sarah': 'en-IN-NeerjaNeural',
+  'Alex': 'en-IN-PrabhatNeural',
+  'Mentor': 'en-IN-NeerjaNeural',
+  'Coach': 'en-IN-PrabhatNeural',
+  'Student Female': 'en-IN-NeerjaNeural',
+  'Student Male': 'en-IN-PrabhatNeural'
+};
+
+const EDGE_GB_VOICE_IDS = {
+  'Sarah': 'en-GB-SoniaNeural',
+  'Alex': 'en-GB-RyanNeural',
+  'Mentor': 'en-GB-LibbyNeural',
+  'Coach': 'en-GB-OliverNeural',
+  'Student Female': 'en-GB-MaisieNeural',
+  'Student Male': 'en-GB-ThomasNeural'
+};
+
 const ELEVENLABS_VOICE_IDS = {
   'Sarah': '21m00Tcm4TlvDq8ikWAM', // Rachel
   'Alex': 'pNInz6obpgDQGcFmaJgB',  // Adam
@@ -72,11 +90,25 @@ const generateElevenLabsAudio = async (text, voiceName, outputPath) => {
     return outputPath;
 };
 
-const generateEdgeAudio = async (text, voiceName, outputPath) => {
-    const voiceId = EDGE_VOICE_IDS[voiceName] || EDGE_VOICE_IDS['Sarah'];
+const generateEdgeAudio = async (text, voiceName, outputPath, options = {}) => {
+    const { accent = 'Indian', language = 'English' } = options;
+    
+    // Choose appropriate voice ID mapping table based on Accent or Hinglish Language
+    let voiceMap = EDGE_VOICE_IDS; // Default is US English
+    
+    if (accent === 'Indian' || language === 'Hinglish') {
+        voiceMap = EDGE_IN_VOICE_IDS;
+    } else if (accent === 'UK') {
+        voiceMap = EDGE_GB_VOICE_IDS;
+    }
+    
+    const voiceId = voiceMap[voiceName] || voiceMap['Sarah'];
+    const isIndian = (accent === 'Indian' || language === 'Hinglish');
+    const isUK = (accent === 'UK');
+
     const tts = new EdgeTTS({
         voice: voiceId,
-        lang: 'en-US',
+        lang: isIndian ? 'en-IN' : (isUK ? 'en-GB' : 'en-US'),
         outputFormat: 'audio-24khz-48kbitrate-mono-mp3'
     });
     
@@ -84,8 +116,9 @@ const generateEdgeAudio = async (text, voiceName, outputPath) => {
     return outputPath;
 };
 
-export const generateChapterAudio = async (text, voiceName, outputPath) => {
-    console.log(`[TTS] Requested provider: ${TTS_PROVIDER} for voice: ${voiceName}`);
+export const generateChapterAudio = async (text, voiceName, outputPath, options = {}) => {
+    const { accent = 'Indian', language = 'English' } = options;
+    console.log(`[TTS] Requested provider: ${TTS_PROVIDER} for voice: ${voiceName} | Accent: ${accent} | Language: ${language}`);
 
     if (TTS_PROVIDER === 'elevenlabs') {
         try {
@@ -94,7 +127,7 @@ export const generateChapterAudio = async (text, voiceName, outputPath) => {
         } catch (error) {
             if (error.message.includes('paid_plan_required') || error.message.includes('quota') || error.message.includes('free')) {
                 console.warn(`[TTS] ElevenLabs failed with paid plan/quota error. Falling back to edge-tts.`);
-                return await generateEdgeAudio(text, voiceName, outputPath);
+                return await generateEdgeAudio(text, voiceName, outputPath, options);
             }
             throw error;
         }
@@ -102,7 +135,7 @@ export const generateChapterAudio = async (text, voiceName, outputPath) => {
         // Default is edge
         try {
             console.log(`[TTS] Generating with Edge TTS...`);
-            return await generateEdgeAudio(text, voiceName, outputPath);
+            return await generateEdgeAudio(text, voiceName, outputPath, options);
         } catch (error) {
             console.error(`[TTS] Edge TTS Error:`, error);
             throw error;
@@ -111,7 +144,7 @@ export const generateChapterAudio = async (text, voiceName, outputPath) => {
 };
 
 export const generateMultiVoiceChapterAudio = async (segments, teacherVoiceName, studentGender, outputPath, options = {}) => {
-    const { podcastId = 'temp', chapterIndex = '0' } = options;
+    const { podcastId = 'temp', chapterIndex = '0', accent = 'Indian', language = 'English' } = options;
     console.log(`[TTS] Starting multi-voice generation. Teacher: ${teacherVoiceName}, Student: ${studentGender} | Podcast: ${podcastId} | Chapter: ${chapterIndex}`);
     
     // Map Student Gender to actual voice name
@@ -198,7 +231,7 @@ export const generateMultiVoiceChapterAudio = async (segments, teacherVoiceName,
         
         try {
             await withRetry(
-                () => generateChapterAudio(chunk.text, chunk.voice, tempPath),
+                () => generateChapterAudio(chunk.text, chunk.voice, tempPath, { accent, language }),
                 3,
                 [1000, 2000, 4000],
                 (attempt, max, error) => {

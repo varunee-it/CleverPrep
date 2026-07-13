@@ -34,7 +34,9 @@ export const processPodcastAudio = async (podcastId) => {
                     );
 
                     const chapter = podcast.chapters[index];
-                    const audioFileName = `${podcast._id}_chapter_${index}_${teacherVoice}_${studentVoice}.mp3`;
+                    const accent = podcast.settings?.accent || 'Indian';
+                    const language = podcast.settings?.language || 'English';
+                    const audioFileName = `${podcast._id}_chapter_${index}_${teacherVoice}_${studentVoice}_${accent}_${language}.mp3`;
                     const audioPath = path.join(audioDir, audioFileName);
 
                     if (!fs.existsSync(audioPath)) {
@@ -44,7 +46,12 @@ export const processPodcastAudio = async (podcastId) => {
                             teacherVoice, 
                             studentVoice, 
                             audioPath,
-                            { podcastId: podcast._id.toString(), chapterIndex: index }
+                            { 
+                                podcastId: podcast._id.toString(), 
+                                chapterIndex: index,
+                                accent: podcast.settings?.accent || 'Indian',
+                                language: podcast.settings?.language || 'English'
+                            }
                         );
                     }
 
