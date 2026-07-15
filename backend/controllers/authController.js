@@ -1,5 +1,13 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/user.js';
+import User from '../models/User.js';
+import PendingUser from '../models/PendingUser.js';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import sendEmail from '../utils/sendEmail.js';
+import { getVerificationEmailHTML, getResetPasswordEmailHTML, getOtpEmailHTML } from '../utils/emailTemplates.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -7,110 +15,539 @@ const generateToken = (id) => {
     });
 };
 
-export const register = async (req, res,next) => {
-    try{
-        const {username,email,password} = req.body;
-        const userExists = await User.findOne({$or :[{email}, {username}]});
-        if(userExists){
+const validatePasswordStrength = (password) => {
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasDigit = /[0-9]/.test(password);
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+    return password && password.length >= minLength && hasUpperCase && hasLowerCase && hasDigit && hasSpecial;
+};
+
+const validateEmailFormat = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) return false;
+
+    const domainPart = email.split('@')[1];
+    if (!domainPart || domainPart.startsWith('.') || domainPart.endsWith('.') || !domainPart.includes('.')) {
+        return false;
+    }
+
+    const fakeDomains = ["test.com", "example.com", "fake.com", "invalid.com"];
+    return !fakeDomains.some(domain => domainPart.toLowerCase() === domain);
+};
+
+const validateUsernameFormat = (username) => {
+    const usernameRegex = /^[A-Za-z0-9_]{5,20}$/;
+    if (!usernameRegex.test(username)) return false;
+    if (username.startsWith('_') || username.endsWith('_')) return false;
+    return true;
+};
+
+export const register = async (req, res, next) => {
+    try {
+        const { username, email, password } = req.body;
+
+        const trimmedUsername = typeof username === "string" ? username.trim() : "";
+        const trimmedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+
+        // Required field validation
+        if (!trimmedUsername || !trimmedEmail || !password) {
             return res.status(400).json({
-                success:false,
-                error:
-                userExists.email === email ? "Email already exists" : "Username already exists",
-                statuseCode:400,
+                success: false,
+                error: "Please provide username, email, and password.",
+                statusCode: 400
             });
         }
-        const user = await User.create({
-            username,
-            email,
-            password,
-        });
-        const token = generateToken(user._id);
+
+        // Email validation
+        if (!validateEmailFormat(trimmedEmail)) {
+            return res.status(400).json({
+                success: false,
+                error: "Please enter a valid email address.",
+                statusCode: 400
+            });
+        }
+
+        // Username validation
+        if (!validateUsernameFormat(trimmedUsername)) {
+            return res.status(422).json({
+                success: false,
+                error: "Username must be between 3 and 25 characters and contain only letters, numbers, and underscores.",
+                statusCode: 422
+            });
+        }
+
+        // Password strength validation
+        if (!validatePasswordStrength(password)) {
+            return res.status(422).json({
+                success: false,
+                error: "Please enter a stronger password.",
+                statusCode: 422
+            });
+        }
+
+        // Check duplicate email
+        const emailExists = await User.findOne({ email: trimmedEmail });
+        if (emailExists) {
+            return res.status(409).json({
+                success: false,
+                error: "An account with this email already exists. Please sign in instead.",
+                statusCode: 409
+            });
+        }
+
+        // Check duplicate username
+        const usernameExists = await User.findOne({ username: trimmedUsername });
+        if (usernameExists) {
+            return res.status(409).json({
+                success: false,
+                error: "This username is already in use.",
+                statusCode: 409
+            });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        // Encrypt password before storage
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Store temporarily in PendingUser
+        await PendingUser.findOneAndUpdate(
+            { email: trimmedEmail },
+            {
+                username: trimmedUsername,
+                email: trimmedEmail,
+                password: hashedPassword,
+                otp,
+                otpExpires,
+                attempts: 0,
+                resends: 0
+            },
+            { upsert: true, new: true }
+        );
+
+        // Send OTP email
+        const html = getOtpEmailHTML(trimmedUsername, otp);
+
+        try {
+            await sendEmail({
+                email: trimmedEmail,
+                subject: 'Verify your email - CleverPrep',
+                html
+            });
+        } catch (mailError) {
+            console.error('Email sending failed during registration:', mailError);
+        }
+
         res.status(201).json({
-            success:true,
-          data:{
-              user:{
-                  id:user._id,
-                  username:user.username,
-                  email:user.email,
-                  pofileImage:user.profileImage,
-                  createAt:user.createdAt,
-
-
-              },
-              token,
-          },
-          message:"User created successfully",
-        })
-    }catch(error){
+            success: true,
+            message: "Verification code sent to your email. Please verify your email address to complete registration.",
+            email: trimmedEmail
+        });
+    } catch (error) {
         next(error);
     }
-    
 };
 
-export const login = async (req, res,next) => {
+export const login = async (req, res, next) => {
     try {
-        const {email,password} = req.body;
-        if(!email || !password){
+        const { email, password } = req.body;
+        if (!email || !password) {
             return res.status(400).json({
-                success:false,
-                error:"Please provide email and password",
-                statuseCode:400,
+                success: false,
+                error: "Please provide email and password",
+                statusCode: 400,
             });
         }
-        const user = await User.findOne({email}).select("+password");
-        if(!user){
+        
+        let user = await User.findOne({ email }).select("+password");
+        let isPending = false;
+        let pendingUser = null;
+
+        if (!user) {
+            pendingUser = await PendingUser.findOne({ email });
+            if (pendingUser) {
+                isPending = true;
+            } else {
+                return res.status(401).json({
+                    success: false,
+                    error: "Invalid email or password",
+                    statusCode: 401,
+                });
+            }
+        }
+
+        if (isPending) {
+            const isMatch = await bcrypt.compare(password, pendingUser.password);
+            if (!isMatch) {
+                return res.status(401).json({
+                    success: false,
+                    error: "Invalid email or password",
+                    statusCode: 401,
+                });
+            }
             return res.status(400).json({
-                success:false,
-                error:"Invalid email or password",
-                statuseCode:401,
-            
+                success: false,
+                error: "Please verify your email before signing in.",
+                statusCode: 400,
+                notVerified: true,
+                email: pendingUser.email
+            });
+        }
+
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                error: "Invalid email or password",
+                statusCode: 401,
+            });
+        }
+
+        // Email Verification Check
+        if (user.isEmailVerified === false || user.emailVerified === false) {
+            return res.status(400).json({
+                success: false,
+                error: "Please verify your email before signing in.",
+                statusCode: 400,
+                notVerified: true,
+                email: user.email
+            });
+        }
+
+        const token = generateToken(user._id);
+        res.status(200).json({
+            success: true,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                profileImage: user.profileImage,
+            },
+            token,
+            message: "Login successful",
         });
+    } catch (error) {
+        next(error);
     }
-    const isMatch = await user.comparePassword(password);
-    if(!isMatch){
-        return res.status(400).json({
-            success:false,
-            error:"Invalid email or password",
-            statuseCode:401,
+};
+
+export const verifyEmail = async (req, res, next) => {
+    try {
+        const { token } = req.params;
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+        const user = await User.findOne({
+            emailVerificationToken: hashedToken,
+            emailVerificationExpires: { $gt: Date.now() }
         });
 
-    }
-    const token = generateToken(user._id);
-    res.status(200).json({
-        success:true,
-        user:{
-            id:user._id,
-            username:user.username,
-            email:user.email,
-            profileImage:user.profileImage,
-        },
-        token,
-        message:"Login successful",
-    });
-}
-        catch(error){
-          next(error);
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid or expired verification token.",
+                statusCode: 400
+            });
         }
-    
+
+        user.isEmailVerified = true;
+        user.emailVerified = true;
+        user.emailVerificationToken = undefined;
+        user.emailVerificationExpires = undefined;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Email verified successfully. You can now log in.",
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                profileImage: user.profileImage
+            },
+            token: generateToken(user._id)
+        });
+    } catch (error) {
+        next(error);
+    }
 };
-export const getProfile= async (req, res,next) => {
-    try{
+
+export const verifyOtp = async (req, res, next) => {
+    try {
+        const { email, otp } = req.body;
+        const trimmedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+        const trimmedOtp = typeof otp === "string" ? otp.trim() : "";
+
+        if (!trimmedEmail || !trimmedOtp) {
+            return res.status(400).json({
+                success: false,
+                error: "Please provide email and verification code.",
+                statusCode: 400
+            });
+        }
+
+        const pending = await PendingUser.findOne({ email: trimmedEmail });
+        if (!pending) {
+            return res.status(400).json({
+                success: false,
+                error: "Verification code expired. Please request another code.",
+                statusCode: 400
+            });
+        }
+
+        if (pending.otpExpires < Date.now()) {
+            return res.status(400).json({
+                success: false,
+                error: "Verification code expired. Please request another code.",
+                statusCode: 400
+            });
+        }
+
+        pending.attempts += 1;
+        await pending.save();
+
+        if (pending.attempts > 5) {
+            await PendingUser.deleteOne({ _id: pending._id });
+            return res.status(400).json({
+                success: false,
+                error: "Maximum verification attempts exceeded. Please register again.",
+                statusCode: 400
+            });
+        }
+
+        if (pending.otp !== trimmedOtp) {
+            return res.status(400).json({
+                success: false,
+                error: "Incorrect verification code.",
+                statusCode: 400
+            });
+        }
+
+        // Check if user already exists
+        const userExists = await User.findOne({ email: pending.email });
+        if (userExists) {
+            await PendingUser.deleteOne({ _id: pending._id });
+            return res.status(400).json({
+                success: false,
+                error: "This email is already registered and verified.",
+                statusCode: 400
+            });
+        }
+
+        // Create the MongoDB user!
+        const user = await User.create({
+            username: pending.username,
+            email: pending.email,
+            password: pending.password, // already hashed
+            isEmailVerified: true,
+            emailVerified: true,
+            provider: "email"
+        });
+
+        // Delete pending record
+        await PendingUser.deleteOne({ _id: pending._id });
+
+        const token = generateToken(user._id);
+
+        res.status(200).json({
+            success: true,
+            message: "Email verified successfully. Account created!",
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                profileImage: user.profileImage
+            },
+            token
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const resendVerification = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        const trimmedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+
+        if (!trimmedEmail) {
+            return res.status(400).json({
+                success: false,
+                error: "Please provide an email address.",
+                statusCode: 400
+            });
+        }
+
+        const user = await User.findOne({ email: trimmedEmail });
+        if (user) {
+            return res.status(400).json({
+                success: false,
+                error: "This email is already verified.",
+                statusCode: 400
+            });
+        }
+
+        const pending = await PendingUser.findOne({ email: trimmedEmail });
+        if (!pending) {
+            return res.status(404).json({
+                success: false,
+                error: "No pending registration found for this email address. Please register again.",
+                statusCode: 404
+            });
+        }
+
+        if (pending.resends >= 5) {
+            return res.status(400).json({
+                success: false,
+                error: "Maximum resend limit of 5 codes reached. Please register again.",
+                statusCode: 400
+            });
+        }
+
+        // Invalidate previous and generate new OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        pending.otp = otp;
+        pending.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        pending.resends += 1;
+        pending.attempts = 0; // reset attempts for the new code
+        await pending.save();
+
+        const html = getOtpEmailHTML(pending.username, otp);
+
+        try {
+            await sendEmail({
+                email: pending.email,
+                subject: 'Verify your email - CleverPrep',
+                html
+            });
+        } catch (mailError) {
+            console.error('Email sending failed during resend verification:', mailError);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Verification code has been resent to your email."
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const forgotPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                error: "Please provide an email address.",
+                statusCode: 400
+            });
+        }
+
+        const user = await User.findOne({ email });
+        // Prevent email enumeration
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message: "If that email is registered, we have sent a reset password link."
+            });
+        }
+
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        user.passwordResetToken = hashedToken;
+        user.passwordResetExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+        await user.save();
+
+        const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+        const html = getResetPasswordEmailHTML(resetUrl, user.username);
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Reset Password Request - CleverPrep',
+                html
+            });
+        } catch (mailError) {
+            console.error('Email sending failed during forgot password:', mailError);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "If that email is registered, we have sent a reset password link."
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const resetPassword = async (req, res, next) => {
+    try {
+        const { token, password } = req.body;
+        if (!token || !password) {
+            return res.status(400).json({
+                success: false,
+                error: "Please provide token and password.",
+                statusCode: 400
+            });
+        }
+
+        if (!validatePasswordStrength(password)) {
+            return res.status(400).json({
+                success: false,
+                error: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+                statusCode: 400
+            });
+        }
+
+        const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+        const user = await User.findOne({
+            passwordResetToken: hashedToken,
+            passwordResetExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid or expired password reset token.",
+                statusCode: 400
+            });
+        }
+
+        user.password = password;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Password reset successful. Please login with your new password."
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getProfile = async (req, res, next) => {
+    try {
         const user = await User.findById(req.user._id);
         res.status(200).json({
-            success:true,
-            data:{
-                id:user._id,
-                username:user.username,
-                email:user.email,
-                profileImage:user.profileImage, 
-                createAt:user.createdAt,
-                updatedAt:user.updatedAt,
-
+            success: true,
+            data: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                profileImage: user.profileImage, 
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
             },
-        
         });
-    }
-    catch(error){
+    } catch (error) {
         next(error);
     }
 };
@@ -128,7 +565,6 @@ export const updateProfile = async (req, res, next) => {
             });
         }
 
-        // Validate username uniqueness
         if (username && username !== user.username) {
             const existingUsername = await User.findOne({ username });
             if (existingUsername) {
@@ -141,7 +577,6 @@ export const updateProfile = async (req, res, next) => {
             user.username = username;
         }
 
-        // Validate email uniqueness
         if (email && email !== user.email) {
             const existingEmail = await User.findOne({ email });
             if (existingEmail) {
@@ -174,65 +609,243 @@ export const updateProfile = async (req, res, next) => {
         next(error);
     }
 };
-export const logout = async (req, res,next) => {
-    
-};
-export const changePassword = async (req, res,next) => {
-    try{
-        console.log("[Auth] Change password requested for user:", req.user._id); // Temp Debug
-        const {currentPassword,newPassword} = req.body;
-        
-       if(!currentPassword || !newPassword){
-        console.log("[Auth] Missing password fields"); // Temp Debug
-        return res.status(400).json({
-            success:false,
-            error:"Please provide current and new password",
-            statusCode:400,
-        });
-       }
-       
-       console.log("[Auth] Fetching user from DB..."); // Temp Debug
-       const user = await User.findById(req.user._id).select("+password");
-       if (!user) {
-        console.log("[Auth] User not found"); // Temp Debug
-        return res.status(404).json({
-            success: false,
-            error: "User not found",
-            statusCode: 404,
-        });
-       }
-       
-       console.log("[Auth] Comparing current password..."); // Temp Debug
-       const isMatch = await user.comparePassword(currentPassword);
-       if(!isMatch){
-        console.log("[Auth] Current password is incorrect"); // Temp Debug
-        return res.status(400).json({
-            success:false,
-            error:"Current password is incorrect",
-            statusCode:401,
-        });
-       }
-       
-       console.log("[Auth] Saving new password to DB..."); // Temp Debug
-       user.password = newPassword;
-       await user.save();
-       
-       console.log("[Auth] Password changed successfully"); // Temp Debug
-       res.status(200).json({
-        success:true,
-        message:"Password changed successfully",
-       });
-    }
 
-    catch(error){
-        console.error("[Auth] Password update failed:", error); // Temp Debug
+export const logout = async (req, res, next) => {
+    res.status(200).json({
+        success: true,
+        message: "Logout successful"
+    });
+};
+
+export const changePassword = async (req, res, next) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                error: "Please provide current and new password",
+                statusCode: 400,
+            });
+        }
+        
+        if (!validatePasswordStrength(newPassword)) {
+            return res.status(400).json({
+                success: false,
+                error: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+                statusCode: 400
+            });
+        }
+
+        const user = await User.findById(req.user._id).select("+password");
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: "User not found",
+                statusCode: 404,
+            });
+        }
+        
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(400).json({
+                success: false,
+                error: "Current password is incorrect",
+                statusCode: 401,
+            });
+        }
+        
+        user.password = newPassword;
+        await user.save();
+        
+        res.status(200).json({
+            success: true,
+            message: "Password changed successfully",
+        });
+    } catch (error) {
         return res.status(500).json({
             success: false,
             error: "Password update failed",
             statusCode: 500,
         });
     }
-    
+};
+
+export const googleSignIn = async (req, res, next) => {
+    try {
+        const { code } = req.body;
+        if (!code) {
+            return res.status(400).json({
+                success: false,
+                error: "Authorization code is required",
+                statusCode: 400
+            });
+        }
+
+        let tokens;
+        try {
+            const oauth2Client = new OAuth2Client(
+                process.env.GOOGLE_CLIENT_ID,
+                process.env.GOOGLE_CLIENT_SECRET,
+                'postmessage'
+            );
+            const tokenResponse = await oauth2Client.getToken(code);
+            tokens = tokenResponse.tokens;
+        } catch (exchangeError) {
+            console.error("Google Auth Code Exchange Failed:", exchangeError);
+            return res.status(401).json({
+                success: false,
+                error: "Failed to exchange authorization code with Google",
+                statusCode: 401
+            });
+        }
+
+        const idToken = tokens.id_token;
+        if (!idToken) {
+            return res.status(400).json({
+                success: false,
+                error: "Google authentication response did not contain an ID token",
+                statusCode: 400
+            });
+        }
+
+        let ticket;
+        try {
+            ticket = await client.verifyIdToken({
+                idToken: idToken,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+        } catch (verifyError) {
+            console.error("Google ID Token Verification Failed:", verifyError);
+            return res.status(401).json({
+                success: false,
+                error: "Invalid or expired Google token",
+                statusCode: 401
+            });
+        }
+
+        const payload = ticket.getPayload();
+        const { sub: googleId, email, name, picture } = payload;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                error: "Google account must have an email associated with it",
+                statusCode: 400
+            });
+        }
+
+        // Search for user by googleId, email, or linked account ID
+        let user = await User.findOne({
+            $or: [
+                { googleId },
+                { email },
+                { "socialAccounts.accountId": googleId, "socialAccounts.provider": "google" }
+            ]
+        });
+
+        if (user) {
+            let isModified = false;
+            
+            if (!user.googleId) {
+                user.googleId = googleId;
+                isModified = true;
+            }
+            
+            if (user.isEmailVerified !== true) {
+                user.isEmailVerified = true;
+                user.emailVerificationToken = undefined;
+                user.emailVerificationExpires = undefined;
+                isModified = true;
+            }
+            
+            const googleLinked = user.socialAccounts.some(
+                acc => acc.provider === "google" && acc.accountId === googleId
+            );
+            if (!googleLinked) {
+                user.socialAccounts.push({
+                    provider: "google",
+                    accountId: googleId,
+                    email: email
+                });
+                isModified = true;
+            }
+
+            if (!user.avatar && picture) {
+                user.avatar = picture;
+                isModified = true;
+            }
+            if (!user.profileImage && picture) {
+                user.profileImage = picture;
+                isModified = true;
+            }
+
+            if (isModified) {
+                await user.save();
+            }
+        } else {
+            let baseUsername = name ? name.replace(/\s+/g, "").toLowerCase() : "user";
+            let username = baseUsername;
+            let count = 1;
+            
+            while (await User.findOne({ username })) {
+                username = `${baseUsername}${count}`;
+                count++;
+            }
+
+            user = await User.create({
+                username,
+                email,
+                isEmailVerified: true,
+                provider: "google",
+                googleId,
+                avatar: picture,
+                profileImage: picture,
+                socialAccounts: [{
+                    provider: "google",
+                    accountId: googleId,
+                    email: email
+                }]
+            });
+        }
+
+        const localToken = generateToken(user._id);
+
+        res.status(200).json({
+            success: true,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                profileImage: user.profileImage || user.avatar,
+                provider: user.provider
+            },
+            token: localToken,
+            message: "Successfully authenticated with Google"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const checkUsername = async (req, res, next) => {
+    try {
+        const { username } = req.query;
+        if (!username || typeof username !== "string") {
+            return res.status(200).json({ success: true, available: false });
+        }
+        const trimmed = username.trim();
+        if (trimmed.length < 5 || trimmed.length > 20 || !/^[A-Za-z0-9_]+$/.test(trimmed)) {
+            return res.status(200).json({ success: true, available: false });
+        }
+        const userExists = await User.findOne({ username: trimmed });
+        res.status(200).json({
+            success: true,
+            available: !userExists
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 

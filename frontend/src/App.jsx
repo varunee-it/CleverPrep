@@ -5,6 +5,9 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
+import ForgotPasswordPage from './pages/Auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/Auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/Auth/VerifyEmailPage';
 import DashboardPage from './pages/Dashboard/DashboardPage';
 import DocumentListPage from './pages/Documents/DocumentListPage';
 import DocumentsDetailPage from './pages/Documents/DocumentsDetailPage';
@@ -43,6 +46,10 @@ const App = () => {
 
         <Route path='/login' element={<LoginPage />} />
         <Route path='/register' element={<RegisterPage />} />
+        <Route path='/forgot-password' element={<ForgotPasswordPage />} />
+        <Route path='/reset-password/:token' element={<ResetPasswordPage />} />
+        <Route path='/verify-email' element={<VerifyEmailPage />} />
+        <Route path='/verify-email/:token' element={<VerifyEmailPage />} />
         
         {/* Public Shared Routes */}
         <Route path='/share/:shareId' element={<SharedChatPage />} />

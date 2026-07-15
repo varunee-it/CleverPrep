@@ -7,6 +7,13 @@ export const API_PATHS = {
     GET_PROFILE: "/auth/profile",
     UPDATE_PROFILE: "/auth/profile",
     CHANGE_PASSWORD: "/auth/change-password",
+    VERIFY_EMAIL: (token) => `/auth/verify-email/${token}`,
+    VERIFY_OTP: "/auth/verify-otp",
+    RESEND_VERIFICATION: "/auth/resend-verification",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
+    GOOGLE_SIGNIN: "/auth/google-signin",
+    CHECK_USERNAME: "/auth/check-username",
   },
 
   DOCUMENTS: {

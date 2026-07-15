@@ -143,6 +143,71 @@ export const changePassword = async (
   }
 };
 
+export const verifyEmail = async (token) => {
+  try {
+    const response = await axiosInstance.get(API_PATHS.AUTH.VERIFY_EMAIL(token));
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Verification failed." };
+  }
+};
+
+export const verifyOtp = async (email, otp) => {
+  try {
+    const response = await axiosInstance.post(API_PATHS.AUTH.VERIFY_OTP, { email, otp });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Verification failed." };
+  }
+};
+
+export const resendVerification = async (email) => {
+  try {
+    const response = await axiosInstance.post(API_PATHS.AUTH.RESEND_VERIFICATION, { email });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Resend failed." };
+  }
+};
+
+export const forgotPassword = async (email) => {
+  try {
+    const response = await axiosInstance.post(API_PATHS.AUTH.FORGOT_PASSWORD, { email });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Request failed." };
+  }
+};
+
+export const resetPassword = async (token, password) => {
+  try {
+    const response = await axiosInstance.post(API_PATHS.AUTH.RESET_PASSWORD, { token, password });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Password reset failed." };
+  }
+};
+
+export const googleSignIn = async (code) => {
+  try {
+    const response = await axiosInstance.post(API_PATHS.AUTH.GOOGLE_SIGNIN, { code });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Google authentication failed." };
+  }
+};
+
+export const checkUsername = async (username) => {
+  try {
+    const response = await axiosInstance.get(API_PATHS.AUTH.CHECK_USERNAME, {
+      params: { username }
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Username check failed." };
+  }
+};
+
 // ==========================================
 // Export Auth Service
 // ==========================================
@@ -152,6 +217,13 @@ const authService = {
   getProfile,
   updateProfile,
   changePassword,
+  verifyEmail,
+  verifyOtp,
+  resendVerification,
+  forgotPassword,
+  resetPassword,
+  googleSignIn,
+  checkUsername,
 };
 
 export default authService;

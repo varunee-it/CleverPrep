@@ -34,8 +34,15 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState({
     username: "",
     email: "",
-    createdAt: null
+    createdAt: null,
+    profileImage: ""
   });
+
+  useEffect(() => {
+    if (user?.provider === "google" && activeSection === "security") {
+      setActiveSection("account");
+    }
+  }, [user, activeSection]);
   const [statsData, setStatsData] = useState(null);
 
   // Form states
@@ -69,7 +76,8 @@ const ProfilePage = () => {
         setProfileData({
           username: usernameVal,
           email: emailVal,
-          createdAt: profileRes.data.createdAt || null
+          createdAt: profileRes.data.createdAt || null,
+          profileImage: profileRes.data.profileImage || ""
         });
 
         setUsernameInput(usernameVal);
@@ -206,12 +214,26 @@ const ProfilePage = () => {
 
       {/* Top Banner section */}
       <div className="bg-white border border-slate-200/85 rounded-3xl p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-6 transition-all duration-300 hover:shadow-md hover:border-slate-300/80">
-        <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-linear-to-br from-emerald-50 to-teal-50 border-4 border-white shadow-lg shadow-slate-200/50 flex items-center justify-center text-emerald-600 text-3xl sm:text-4xl font-black font-display">
-          {initial}
+        <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-linear-to-br from-emerald-50 to-teal-50 border-4 border-white shadow-lg shadow-slate-200/50 flex items-center justify-center text-emerald-600 overflow-hidden text-3xl sm:text-4xl font-black font-display uppercase">
+          {profileData.profileImage || user?.profileImage ? (
+            <img
+              src={profileData.profileImage || user?.profileImage}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span>{initial}</span>
+          )}
         </div>
         <div className="text-center sm:text-left flex-1 pt-1 space-y-1">
-          <h2 className="text-2xl font-bold text-slate-900 flex items-center justify-center sm:justify-start gap-2">
-            {displayName} <ShieldCheck className="w-5 h-5 text-emerald-500" strokeWidth={2.5} />
+          <h2 className="text-2xl font-bold text-slate-900 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            {displayName} 
+            <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" strokeWidth={2.5} />
+            {user?.provider === "google" && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
+                Google Account
+              </span>
+            )}
           </h2>
           <p className="text-slate-500 font-semibold text-sm">{profileData.email}</p>
           {profileData.createdAt && (
@@ -295,24 +317,26 @@ const ProfilePage = () => {
                 </div>
               </button>
 
-              <button
-                onClick={() => setActiveSection("security")}
-                className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group ${
-                  activeSection === "security"
-                    ? "bg-emerald-50/60 text-emerald-700 font-bold"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-                  activeSection === "security" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600"
-                }`}>
-                  <Lock className="w-4.5 h-4.5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold">Security & Password</p>
-                  <p className="text-[11px] font-medium text-slate-400 mt-0.5">Update credentials & password</p>
-                </div>
-              </button>
+              {user?.provider !== "google" && (
+                <button
+                  onClick={() => setActiveSection("security")}
+                  className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group ${
+                    activeSection === "security"
+                      ? "bg-emerald-50/60 text-emerald-700 font-bold"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
+                    activeSection === "security" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600"
+                  }`}>
+                    <Lock className="w-4.5 h-4.5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold">Security & Password</p>
+                    <p className="text-[11px] font-medium text-slate-400 mt-0.5">Update credentials & password</p>
+                  </div>
+                </button>
+              )}
 
               <button
                 onClick={() => setActiveSection("notifications")}
@@ -402,6 +426,40 @@ const ProfilePage = () => {
                   <p className="text-[10px] text-slate-400 font-medium leading-relaxed pl-1 pt-0.5">
                     This preferred name is used by the AI podcast host when directly addressing you during dialog transcripts.
                   </p>
+                </div>
+
+                {/* Login Methods section */}
+                <div className="space-y-2.5 pt-4 border-t border-slate-100">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">
+                    Authentication Providers
+                  </label>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between border border-slate-200/80 rounded-xl p-3.5 bg-slate-50/50">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">📧</span>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">Email Credentials</p>
+                          <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Secure password log-in</p>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${user?.provider !== "google" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-100 text-slate-400"}`}>
+                        {user?.provider !== "google" ? "Active" : "Linked"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between border border-slate-200/80 rounded-xl p-3.5 bg-slate-50/50">
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">🌐</span>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">Google Sign-in</p>
+                          <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Stateless OAuth provider</p>
+                        </div>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full ${user?.provider === "google" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-slate-100 text-slate-400"}`}>
+                        {user?.provider === "google" ? "Active" : "Linked"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
