@@ -6,6 +6,10 @@ import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
 import { getVerificationEmailHTML, getResetPasswordEmailHTML, getOtpEmailHTML } from '../utils/emailTemplates.js';
 import { OAuth2Client } from 'google-auth-library';
+import { AvatarStorageService } from "../services/avatarStorageService.js";
+import Document from "../models/Document.js";
+import Flashcard from "../models/Flashcard.js";
+import Quiz from "../models/Quize.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -38,9 +42,15 @@ const validateEmailFormat = (email) => {
 };
 
 const validateUsernameFormat = (username) => {
-    const usernameRegex = /^[A-Za-z0-9_]{5,20}$/;
+    const usernameRegex = /^[A-Za-z0-9_]{5,30}$/;
     if (!usernameRegex.test(username)) return false;
     if (username.startsWith('_') || username.endsWith('_')) return false;
+    const reservedUsernames = [
+        "admin", "administrator", "root", "support", "system", "api", "login", "logout", "register", 
+        "settings", "profile", "dashboard", "library", "documents", "flashcards", "quiz", "search", 
+        "upload", "notifications", "help", "privacy", "terms", "cleverprep"
+    ];
+    if (reservedUsernames.includes(username.toLowerCase())) return false;
     return true;
 };
 
@@ -227,6 +237,7 @@ export const login = async (req, res, next) => {
                 username: user.username,
                 email: user.email,
                 profileImage: user.profileImage,
+                onboarding: user.onboarding
             },
             token,
             message: "Login successful",
@@ -360,7 +371,8 @@ export const verifyOtp = async (req, res, next) => {
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                profileImage: user.profileImage
+                profileImage: user.profileImage,
+                onboarding: user.onboarding
             },
             token
         });
@@ -545,6 +557,7 @@ export const getProfile = async (req, res, next) => {
                 profileImage: user.profileImage, 
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
+                onboarding: user.onboarding
             },
         });
     } catch (error) {
@@ -554,7 +567,7 @@ export const getProfile = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
     try {
-        const { username, email, profileImage } = req.body;
+        const { username, email, profileImage, preferredStudyName, notificationPrefs } = req.body;
         
         const user = await User.findById(req.user._id);
         if (!user) {
@@ -566,6 +579,13 @@ export const updateProfile = async (req, res, next) => {
         }
 
         if (username && username !== user.username) {
+            if (!validateUsernameFormat(username)) {
+                return res.status(400).json({
+                    success: false,
+                    error: "Username must be 5 to 30 characters, cannot start or end with an underscore, can contain only letters, numbers, and underscores, and cannot be a reserved word.",
+                    statusCode: 400
+                });
+            }
             const existingUsername = await User.findOne({ username });
             if (existingUsername) {
                 return res.status(400).json({
@@ -578,18 +598,26 @@ export const updateProfile = async (req, res, next) => {
         }
 
         if (email && email !== user.email) {
-            const existingEmail = await User.findOne({ email });
-            if (existingEmail) {
-                return res.status(400).json({
-                    success: false,
-                    error: "Email is already taken",
-                    statusCode: 400
-                });
-            }
-            user.email = email;
+            return res.status(400).json({
+                success: false,
+                error: "Email editing is not allowed.",
+                statusCode: 400
+            });
         }
 
-        if (profileImage) {
+        if (preferredStudyName !== undefined) {
+            user.preferredStudyName = preferredStudyName;
+        }
+
+        if (notificationPrefs) {
+            user.notificationPrefs = {
+                emailAlerts: notificationPrefs.emailAlerts !== false,
+                weeklyReport: notificationPrefs.weeklyReport === true,
+                productUpdates: notificationPrefs.productUpdates === true
+            };
+        }
+
+        if (profileImage !== undefined) {
             user.profileImage = profileImage;
         }
 
@@ -602,6 +630,13 @@ export const updateProfile = async (req, res, next) => {
                 username: user.username,
                 email: user.email,
                 profileImage: user.profileImage, 
+                preferredStudyName: user.preferredStudyName,
+                notificationPrefs: user.notificationPrefs,
+                isEmailVerified: user.isEmailVerified,
+                emailVerified: user.emailVerified,
+                verifiedAt: user.verifiedAt,
+                provider: user.provider,
+                onboarding: user.onboarding
             },
             message: "Profile updated successfully",
         });
@@ -818,7 +853,8 @@ export const googleSignIn = async (req, res, next) => {
                 username: user.username,
                 email: user.email,
                 profileImage: user.profileImage || user.avatar,
-                provider: user.provider
+                provider: user.provider,
+                onboarding: user.onboarding
             },
             token: localToken,
             message: "Successfully authenticated with Google"
@@ -835,13 +871,200 @@ export const checkUsername = async (req, res, next) => {
             return res.status(200).json({ success: true, available: false });
         }
         const trimmed = username.trim();
-        if (trimmed.length < 5 || trimmed.length > 20 || !/^[A-Za-z0-9_]+$/.test(trimmed)) {
+        if (!validateUsernameFormat(trimmed)) {
             return res.status(200).json({ success: true, available: false });
         }
         const userExists = await User.findOne({ username: trimmed });
         res.status(200).json({
             success: true,
             available: !userExists
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const uploadAvatar = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                error: "Please upload an image file.",
+                statusCode: 400
+            });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: "User not found.",
+                statusCode: 404
+            });
+        }
+
+        const oldAvatar = user.profileImage;
+        const newAvatarUrl = await AvatarStorageService.upload(req.file.buffer, req.file.originalname);
+        
+        user.profileImage = newAvatarUrl;
+        await user.save();
+
+        // Delete old local custom avatar if there was one
+        if (oldAvatar && oldAvatar.startsWith("/uploads/avatars/")) {
+            await AvatarStorageService.delete(oldAvatar);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Avatar uploaded successfully",
+            profileImage: newAvatarUrl
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            error: error.message || "Failed to upload avatar.",
+            statusCode: 400
+        });
+    }
+};
+
+export const deleteAvatar = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: "User not found.",
+                statusCode: 404
+            });
+        }
+
+        const oldAvatar = user.profileImage;
+        user.profileImage = null;
+        await user.save();
+
+        if (oldAvatar && oldAvatar.startsWith("/uploads/avatars/")) {
+            await AvatarStorageService.delete(oldAvatar);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Avatar removed successfully",
+            profileImage: null
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteAccount = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: "User not found.",
+                statusCode: 404
+            });
+        }
+
+        const oldAvatar = user.profileImage;
+
+        // Cascade delete study materials
+        await Document.deleteMany({ userId });
+        await Flashcard.deleteMany({ userId });
+        await Quiz.deleteMany({ userId });
+        
+        // Delete user
+        await User.deleteOne({ _id: userId });
+
+        // Clean up avatar image
+        if (oldAvatar && oldAvatar.startsWith("/uploads/avatars/")) {
+            await AvatarStorageService.delete(oldAvatar);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Account deleted successfully."
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateOnboardingStatus = async (req, res, next) => {
+    try {
+        const { hasCompletedTour, tourVersion, autoShowNewTours } = req.body;
+        
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: "User not found.",
+                statusCode: 404
+            });
+        }
+
+        if (user.onboarding === undefined) {
+            user.onboarding = {};
+        }
+
+        if (hasCompletedTour !== undefined) {
+            user.onboarding.hasCompletedTour = hasCompletedTour;
+            if (hasCompletedTour) {
+                user.onboarding.completedTourAt = new Date();
+            }
+        }
+
+        if (tourVersion !== undefined) {
+            user.onboarding.tourVersion = tourVersion;
+        }
+
+        if (autoShowNewTours !== undefined) {
+            user.onboarding.autoShowNewTours = autoShowNewTours;
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            data: {
+                onboarding: user.onboarding
+            },
+            message: "Onboarding status updated successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const resetOnboardingTour = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                error: "User not found.",
+                statusCode: 404
+            });
+        }
+
+        if (user.onboarding === undefined) {
+            user.onboarding = {};
+        }
+
+        user.onboarding.hasCompletedTour = false;
+        user.onboarding.completedTourAt = null;
+        
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            data: {
+                onboarding: user.onboarding
+            },
+            message: "Onboarding tour reset successfully"
         });
     } catch (error) {
         next(error);

@@ -31,8 +31,10 @@ import aiService from "../../services/aiService";
 import Spinner from "../common/Spinner";
 import Modal from "../common/Modal";
 import Flashcard from "./Flashcard";
+import { useTour } from "../../context/TourContext";
 
 const FlashcardManager = ({ documentId, onTabChange }) => {
+    const { evaluateTrigger } = useTour();
     console.log("FlashcardManager rendered");
 
     // Core sets & selection states
@@ -165,6 +167,7 @@ const FlashcardManager = ({ documentId, onTabChange }) => {
                 fetchFlashcardSets();
                 setGenerating(false);
                 setIsConfigModalOpen(false);
+                evaluateTrigger();
             }, 500);
 
         } catch (error) {

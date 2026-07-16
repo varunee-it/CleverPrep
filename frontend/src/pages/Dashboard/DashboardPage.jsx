@@ -19,10 +19,12 @@ import {
 import Spinner from "../../components/common/Spinner";
 import progressService from "../../services/progressService";
 import { useAuth } from "../../context/AuthContext";
+import { useTour } from "../../context/TourContext";
 import moment from "moment";
 
 const DashboardPage = () => {
   const { user } = useAuth();
+  const { showWelcomeModal, setShowWelcomeModal, skipTour } = useTour();
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -77,11 +79,54 @@ const DashboardPage = () => {
 
         <Link 
           to="/documents" 
-          className="inline-flex items-center gap-2 px-8 h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-full font-bold text-sm shadow-lg shadow-slate-900/10 hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          className="inline-flex items-center gap-2 px-8 h-12 bg-slate-900 hover:bg-slate-800 text-white rounded-full font-bold text-sm shadow-lg shadow-slate-900/10 hover:shadow-xl transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer tour-upload-section"
         >
           <Plus className="w-4.5 h-4.5 text-white" strokeWidth={2.5} />
           Upload Your First Document
         </Link>
+
+        {showWelcomeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
+            <div 
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-100 text-center animate-in fade-in zoom-in-95 duration-200"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="welcome-modal-title"
+            >
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20">
+                <Sparkles className="w-8 h-8" />
+              </div>
+              
+              <h3 id="welcome-modal-title" className="text-xl sm:text-2xl font-black text-slate-900 mb-3 font-display">
+                Welcome to CleverPrep!
+              </h3>
+              
+              <p className="text-xs sm:text-sm text-slate-550 leading-relaxed font-semibold mb-8 max-w-sm mx-auto">
+                Transform your textbooks, lecture notes, and PDFs into AI summaries, interactive quizzes, flashcard decks, and revision podcasts.
+                <br /><br />
+                Upload your first document to begin your customized learning path.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => skipTour()}
+                  className="flex-1 h-11 px-5 border border-slate-200 text-slate-550 hover:text-slate-800 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={() => {
+                    setShowWelcomeModal(false);
+                    navigate("/documents");
+                  }}
+                  className="flex-1 h-11 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-lg shadow-slate-900/10 transition-all cursor-pointer"
+                >
+                  Upload First Document
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -121,7 +166,7 @@ const DashboardPage = () => {
         <div className="relative z-10 shrink-0">
           <Link
             to="/documents"
-            className="flex items-center gap-2 px-6 h-12 bg-white text-emerald-700 hover:text-emerald-800 rounded-2xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer"
+            className="flex items-center gap-2 px-6 h-12 bg-white text-emerald-700 hover:text-emerald-800 rounded-2xl font-bold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98] cursor-pointer tour-upload-section"
           >
             <Plus className="w-5 h-5" strokeWidth={2.5} />
             Upload PDF Document
@@ -342,6 +387,48 @@ const DashboardPage = () => {
 
       </div>
 
+      {showWelcomeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-slate-100 text-center animate-in fade-in zoom-in-95 duration-200"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="welcome-modal-title-normal"
+          >
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-500 text-white flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/20">
+              <Sparkles className="w-8 h-8" />
+            </div>
+            
+            <h3 id="welcome-modal-title-normal" className="text-xl sm:text-2xl font-black text-slate-900 mb-3 font-display">
+              Welcome to CleverPrep!
+            </h3>
+            
+            <p className="text-xs sm:text-sm text-slate-550 leading-relaxed font-semibold mb-8 max-w-sm mx-auto">
+              Transform your textbooks, lecture notes, and PDFs into AI summaries, interactive quizzes, flashcard decks, and revision podcasts.
+              <br /><br />
+              Upload your first document to begin your customized learning path.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => skipTour()}
+                className="flex-1 h-11 px-5 border border-slate-200 text-slate-550 hover:text-slate-800 hover:bg-slate-55 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              >
+                Skip
+              </button>
+              <button
+                onClick={() => {
+                  setShowWelcomeModal(false);
+                  navigate("/documents");
+                }}
+                className="flex-1 h-11 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-550/20 transition-all cursor-pointer"
+              >
+                Upload First Document
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

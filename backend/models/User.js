@@ -80,6 +80,46 @@ const UserSchema = new mongoose.Schema({
     },
     avatar: {
         type: String
+    },
+    preferredStudyName: {
+        type: String,
+        default: ""
+    },
+    verifiedAt: {
+        type: Date,
+        default: null
+    },
+    notificationPrefs: {
+        emailAlerts: {
+            type: Boolean,
+            default: true
+        },
+        weeklyReport: {
+            type: Boolean,
+            default: false
+        },
+        productUpdates: {
+            type: Boolean,
+            default: false
+        }
+    },
+    onboarding: {
+        hasCompletedTour: {
+            type: Boolean,
+            default: false
+        },
+        completedTourAt: {
+            type: Date,
+            default: null
+        },
+        tourVersion: {
+            type: Number,
+            default: 1
+        },
+        autoShowNewTours: {
+            type: Boolean,
+            default: true
+        }
     }
 }, {
     timestamps: true

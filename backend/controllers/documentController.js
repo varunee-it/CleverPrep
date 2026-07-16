@@ -138,9 +138,18 @@ export const getDocuments = async (req, res, next) => {
         },
       },
       {
+        $lookup: {
+          from: "podcasts",
+          localField: "_id",
+          foreignField: "documentId",
+          as: "podcasts",
+        },
+      },
+      {
         $addFields: {
           flashcardCount: { $size: "$flashcards" },
           quizCount: { $size: "$quizzes" },
+          podcastCount: { $size: "$podcasts" },
         },
       },
       {
@@ -149,6 +158,7 @@ export const getDocuments = async (req, res, next) => {
           chunks: 0,
           flashcards: 0,
           quizzes: 0,
+          podcasts: 0,
         },
       },
       {

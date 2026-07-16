@@ -12,10 +12,16 @@ import {
     forgotPassword,
     resetPassword,
     googleSignIn,
-    checkUsername
+    checkUsername,
+    uploadAvatar,
+    deleteAvatar,
+    deleteAccount,
+    updateOnboardingStatus,
+    resetOnboardingTour
 } from "../controllers/authController.js";
 import protect from "../middleware/auth.js";
 import { authLimiter, emailLimiter } from "../middleware/rateLimiter.js";
+import avatarUpload from "../config/avatarMulter.js";
 
 const router = express.Router();
 
@@ -59,6 +65,13 @@ router.post('/reset-password', resetPassword); // Password strength validated in
 
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
+router.post('/profile/avatar', protect, avatarUpload.single('avatar'), uploadAvatar);
+router.delete('/profile/avatar', protect, deleteAvatar);
+router.delete('/profile', protect, deleteAccount);
 router.post('/change-password', protect, changePassword);
+
+// Onboarding/Product Tour Routes
+router.put('/profile/onboarding', protect, updateOnboardingStatus);
+router.post('/profile/onboarding/reset', protect, resetOnboardingTour);
 
 export default router;

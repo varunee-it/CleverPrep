@@ -6,9 +6,11 @@ import PodcastPlayer from './PodcastPlayer';
 import { isValidDisplayName, validateStudyName } from '../../utils/nameValidation';
 
 import { useAuth } from '../../context/AuthContext';
+import { useTour } from '../../context/TourContext';
 
 const PodcastManager = ({ documentId, documentTitle }) => {
   const { user } = useAuth();
+  const { evaluateTrigger } = useTour();
   const [podcasts, setPodcasts] = useState([]);
   const [failedJobs, setFailedJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -133,6 +135,7 @@ const PodcastManager = ({ documentId, documentTitle }) => {
           setShowCreateForm(false);
           setIsGenerating(false);
           toast.success("Podcast generated successfully!");
+          evaluateTrigger();
       }
     } catch (error) {
       toast.error(error.message || 'Failed to start generation.');
@@ -166,6 +169,7 @@ const PodcastManager = ({ documentId, documentTitle }) => {
                            // Reload all
                            fetchPodcasts();
                       }
+                      evaluateTrigger();
                   } else if (res.data.status === 'failed') {
                       toast.error("Generation failed. Please try again.");
                   }

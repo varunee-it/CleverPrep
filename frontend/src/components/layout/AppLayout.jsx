@@ -2,6 +2,7 @@ import React, { useState } from "react";
 
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import TourOverlay from "../tour/TourOverlay";
 
 // ==========================================
 // Main App Layout
@@ -50,6 +51,7 @@ const AppLayout = ({ children }) => {
           </div>
         </main>
       </div>
+      <TourOverlay />
     </div>
   );
 };

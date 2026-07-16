@@ -9,8 +9,10 @@ import Button from '../common/Button';
 import Modal from '../common/Modal';
 import QuizCard from './QuizCard';
 import EmptyState from '../common/EmptyState';
+import { useTour } from '../../context/TourContext';
 
 const QuizManager = ({ documentId }) => {
+    const { evaluateTrigger } = useTour();
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
@@ -48,6 +50,7 @@ const QuizManager = ({ documentId }) => {
             toast.success('Quiz generated successfully!');
             setIsGenerateModalOpen(false);
             fetchQuizzes();
+            evaluateTrigger();
         } catch (error) {
             toast.error(error.message || 'Failed to generate quiz.');
         } finally {

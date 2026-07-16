@@ -56,7 +56,7 @@ const Sidebar = ({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-white border-r border-slate-200/60 z-50 transition-all duration-300 ease-in-out flex flex-col
+        className={`fixed top-0 left-0 h-full bg-white border-r border-slate-200/60 z-50 transition-all duration-300 ease-in-out flex flex-col tour-sidebar
           ${/* Mobile: Slide out drawer */ ""}
           ${isMobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}
           ${/* Desktop: Fixed positioning below header */ ""}
@@ -99,6 +99,8 @@ const Sidebar = ({
                   isActive
                     ? "bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100/50"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:translate-x-0.5"
+                } ${
+                  link.to === "/documents" ? "tour-sidebar-library" : link.to === "/profile" ? "tour-sidebar-profile" : ""
                 }`
               }
               title={isSidebarCollapsed ? link.text : ""}

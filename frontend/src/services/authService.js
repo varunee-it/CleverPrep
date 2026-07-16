@@ -208,6 +208,68 @@ export const checkUsername = async (username) => {
   }
 };
 
+export const uploadAvatar = async (formData) => {
+  try {
+    const response = await axiosInstance.post(
+      API_PATHS.AUTH.UPLOAD_AVATAR,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Upload failed." };
+  }
+};
+
+export const deleteAvatar = async () => {
+  try {
+    const response = await axiosInstance.delete(
+      API_PATHS.AUTH.DELETE_AVATAR
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Removal failed." };
+  }
+};
+
+export const deleteAccount = async () => {
+  try {
+    const response = await axiosInstance.delete(
+      API_PATHS.AUTH.DELETE_ACCOUNT
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Account deletion failed." };
+  }
+};
+
+export const updateOnboarding = async (onboardingData) => {
+  try {
+    const response = await axiosInstance.put(
+      API_PATHS.AUTH.UPDATE_ONBOARDING,
+      onboardingData
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to update onboarding." };
+  }
+};
+
+export const resetOnboarding = async () => {
+  try {
+    const response = await axiosInstance.post(
+      API_PATHS.AUTH.RESET_ONBOARDING
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to reset onboarding." };
+  }
+};
+
 // ==========================================
 // Export Auth Service
 // ==========================================
@@ -224,6 +286,11 @@ const authService = {
   resetPassword,
   googleSignIn,
   checkUsername,
+  uploadAvatar,
+  deleteAvatar,
+  deleteAccount,
+  updateOnboarding,
+  resetOnboarding,
 };
 
 export default authService;

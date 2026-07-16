@@ -11,8 +11,10 @@ import { BASE_URL } from '../../utils/apiPaths';
 import FlashcardManager from '../../components/flashcards/FlashcardManager';
 import QuizManager from '../../components/quizzes/QuizManager';
 import PodcastManager from '../../components/podcast/PodcastManager';
+import { useTour } from '../../context/TourContext';
 
 const DocumentDetailPage = () => {
+  const { currentTabSelection, setCurrentTabSelection } = useTour();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -25,6 +27,17 @@ const DocumentDetailPage = () => {
     return tab || sessionStorage.getItem(`doc_tab_${id}`) || 'Content';
   };
   const [activeTab, setActiveTab] = useState(getInitialTab());
+
+  useEffect(() => {
+    if (currentTabSelection && currentTabSelection !== activeTab) {
+      setActiveTab(currentTabSelection);
+    }
+  }, [currentTabSelection, activeTab]);
+
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    setCurrentTabSelection(tabId);
+  };
 
   const handleBack = () => {
     if (location.state?.from) {
@@ -140,11 +153,16 @@ const DocumentDetailPage = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabClick(tab.id)}
                 className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 ${
                   isActive 
                     ? 'bg-emerald-50 text-emerald-700 shadow-sm border border-emerald-200' 
                     : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
+                } ${
+                  tab.id === 'Summary' ? 'tour-tab-notes' :
+                  tab.id === 'Quizzes' ? 'tour-tab-quiz' :
+                  tab.id === 'Flashcards' ? 'tour-tab-flashcards' :
+                  tab.id === 'Podcast' ? 'tour-tab-podcast' : ''
                 }`}
               >
                 <tab.icon size={18} className={isActive ? "text-emerald-600" : "text-slate-400"} />

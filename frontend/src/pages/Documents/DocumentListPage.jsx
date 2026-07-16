@@ -22,9 +22,11 @@ import toast from "react-hot-toast";
 import documentService from "../../services/documentService";
 import Spinner from "../../components/common/Spinner";
 import DocumentCard from "../../components/documents/DocumentCard";
+import { useTour } from "../../context/TourContext";
 
 const DocumentListPage = () => {
   const navigate = useNavigate();
+  const { checkAndTriggerWalkthrough } = useTour();
 
   // ==========================================
   // State: Documents & Filtering
@@ -60,6 +62,7 @@ const DocumentListPage = () => {
     try {
       const data = await documentService.getDocuments();
       setDocuments(data);
+      checkAndTriggerWalkthrough(data);
     } catch (error) {
       toast.error("Failed to fetch documents.");
       console.error(error);

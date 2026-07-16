@@ -14,6 +14,11 @@ export const API_PATHS = {
     RESET_PASSWORD: "/auth/reset-password",
     GOOGLE_SIGNIN: "/auth/google-signin",
     CHECK_USERNAME: "/auth/check-username",
+    UPLOAD_AVATAR: "/auth/profile/avatar",
+    DELETE_AVATAR: "/auth/profile/avatar",
+    DELETE_ACCOUNT: "/auth/profile",
+    UPDATE_ONBOARDING: "/auth/profile/onboarding",
+    RESET_ONBOARDING: "/auth/profile/onboarding/reset",
   },
 
   DOCUMENTS: {
