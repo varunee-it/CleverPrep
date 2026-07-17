@@ -42,6 +42,15 @@ export const TourProvider = ({ children }) => {
   
   const [currentTabSelection, setCurrentTabSelection] = useState("");
 
+  const [previousTooltipPosition, setPreviousTooltipPosition] = useState(() => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    return {
+      x: Math.max(10, w / 2 - 180),
+      y: Math.max(10, h / 2 - 100)
+    };
+  });
+
   // States for premium completion sequence
   const [isTourCompleting, setIsTourCompleting] = useState(false);
   const [isBackdropFading, setIsBackdropFading] = useState(false);
@@ -75,10 +84,7 @@ export const TourProvider = ({ children }) => {
   const {
     isTransitioning,
     isTooltipFading,
-    showRetryState,
-    isFeatureUnavailable,
-    transitionToStep,
-    retryTransition
+    transitionToStep
   } = useTourTransition(
     currentStepIndex,
     setCurrentStepIndex,
@@ -136,8 +142,24 @@ export const TourProvider = ({ children }) => {
   };
 
   // Start the tour
-  const startTour = useCallback((force = false) => {
+  const startTour = useCallback(async (force = false) => {
     if (!force && user?.onboarding?.hasCompletedTour) return;
+    
+    // Auto-populate activeDocId if missing but documents exist
+    const savedDocId = sessionStorage.getItem("cleverprep_tour_active_doc_id");
+    if (!savedDocId || savedDocId === "") {
+      try {
+        const documents = await documentService.getDocuments();
+        const validDocs = documents?.filter(doc => doc && doc._id) || [];
+        if (validDocs.length > 0) {
+          const oldestDoc = [...validDocs].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
+          setActiveDocId(oldestDoc._id);
+          sessionStorage.setItem("cleverprep_tour_active_doc_id", oldestDoc._id);
+        }
+      } catch (err) {
+        console.error("[TourContext] Failed to fetch documents for tour start:", err);
+      }
+    }
     
     setIsTourCompleting(false);
     setIsBackdropFading(false);
@@ -299,8 +321,6 @@ export const TourProvider = ({ children }) => {
         targetRect,
         isTransitioning,
         isTooltipFading,
-        showRetryState,
-        isFeatureUnavailable,
         isTourCompleting,
         isBackdropFading,
         showExitModal,
@@ -308,6 +328,8 @@ export const TourProvider = ({ children }) => {
         activeDocId,
         currentTabSelection,
         activeStep,
+        previousTooltipPosition,
+        setPreviousTooltipPosition,
         startTour,
         nextStep,
         prevStep,
@@ -323,8 +345,7 @@ export const TourProvider = ({ children }) => {
         evaluateTrigger,
         setActiveDocId,
         setCurrentTabSelection,
-        updateTargetCoordinates,
-        retryTransition
+        updateTargetCoordinates
       }}
     >
       {children}

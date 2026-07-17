@@ -1,23 +1,43 @@
 import { useState, useEffect } from "react";
 
-export const useTooltipPosition = (isActive, activeStep, targetRect, tooltipRef) => {
-  const [coords, setCoords] = useState({ top: 0, left: 0, placement: "center" });
+export const useTooltipPosition = (
+  isActive,
+  activeStep,
+  targetRect,
+  tooltipRef,
+  previousTooltipPosition,
+  setPreviousTooltipPosition
+) => {
+  const [coords, setCoords] = useState(() => {
+    return {
+      top: previousTooltipPosition?.y ?? 100,
+      left: previousTooltipPosition?.x ?? 100,
+      placement: "bottom"
+    };
+  });
 
   useEffect(() => {
     if (!isActive || !activeStep) return;
 
     const calculatePosition = () => {
-      // 1. Center step layout override
-      if (activeStep.position === "center" || !targetRect) {
-        setCoords({ top: 0, left: 0, placement: "center" });
-        return;
-      }
-
       const tooltip = tooltipRef.current;
-      const tooltipWidth = tooltip ? tooltip.offsetWidth : 350;
+      const tooltipWidth = tooltip ? tooltip.offsetWidth : 360;
       const tooltipHeight = tooltip ? tooltip.offsetHeight : 200;
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
+
+      // 1. Center step layout override (for steps without a target selector)
+      if (activeStep.position === "center" || !targetRect) {
+        const cx = Math.max(10, viewportWidth / 2 - tooltipWidth / 2);
+        const cy = Math.max(10, viewportHeight / 2 - tooltipHeight / 2);
+        setCoords({ top: cy, left: cx, placement: "center-translated" });
+        
+        // Update persistent global position
+        if (setPreviousTooltipPosition) {
+          setPreviousTooltipPosition({ x: cx, y: cy });
+        }
+        return;
+      }
 
       // 2. Mobile Layout Override (Fixed bottom sheet)
       if (viewportWidth < 768) {
@@ -37,13 +57,15 @@ export const useTooltipPosition = (isActive, activeStep, targetRect, tooltipRef)
       let preferredPlacement = activeStep.position || "bottom";
 
       if (targetRect.top < 85) {
-        preferredPlacement = "bottom"; // Near top header -> Bottom
+        preferredPlacement = "bottom"; // Near top header -> Below
       } else if (targetRect.left < 265) {
         preferredPlacement = "right";  // Near sidebar -> Right
       } else if (targetRect.left + targetRect.width > viewportWidth - 310) {
         preferredPlacement = "left";   // Near right border -> Left
       } else if (targetRect.top + targetRect.height > viewportHeight - 130) {
         preferredPlacement = "top";    // Near bottom -> Top
+      } else {
+        preferredPlacement = "bottom-right"; // Center items -> Bottom-right offset
       }
 
       // Helper function to get coordinates for a specific placement
@@ -62,6 +84,9 @@ export const useTooltipPosition = (isActive, activeStep, targetRect, tooltipRef)
         } else if (placementVal === "left") {
           t = targetTop + (targetRect.height + padding * 2) / 2 - tooltipHeight / 2;
           l = targetLeft - tooltipWidth - gap;
+        } else if (placementVal === "bottom-right") {
+          t = targetBottom + gap;
+          l = targetRight - 40;
         }
         return { top: t, left: l };
       };
@@ -85,7 +110,8 @@ export const useTooltipPosition = (isActive, activeStep, targetRect, tooltipRef)
           top: "bottom",
           bottom: "top",
           left: "right",
-          right: "left"
+          right: "left",
+          "bottom-right": "top"
         };
         const flippedPlacement = flipMapping[preferredPlacement];
         const flippedCoords = getCoordsForPlacement(flippedPlacement);
@@ -128,6 +154,11 @@ export const useTooltipPosition = (isActive, activeStep, targetRect, tooltipRef)
         left: adjustedLeft,
         placement: finalPlacement,
       });
+
+      // Update persistent global position
+      if (setPreviousTooltipPosition) {
+        setPreviousTooltipPosition({ x: adjustedLeft, y: adjustedTop });
+      }
     };
 
     calculatePosition();
@@ -138,7 +169,7 @@ export const useTooltipPosition = (isActive, activeStep, targetRect, tooltipRef)
       window.removeEventListener("resize", calculatePosition);
       window.removeEventListener("scroll", calculatePosition);
     };
-  }, [isActive, activeStep, targetRect, tooltipRef]);
+  }, [isActive, activeStep, targetRect, tooltipRef, setPreviousTooltipPosition]);
 
   return coords;
 };

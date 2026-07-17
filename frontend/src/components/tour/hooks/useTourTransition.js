@@ -13,9 +13,6 @@ export const useTourTransition = (
 ) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isTooltipFading, setIsTooltipFading] = useState(false);
-  const [showRetryState, setShowRetryState] = useState(false);
-  const [isFeatureUnavailable, setIsFeatureUnavailable] = useState(false);
-  const [failedStepIndex, setFailedStepIndex] = useState(null);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,13 +26,23 @@ export const useTourTransition = (
     let scrollDuration = 0;
     let spotlightDuration = 0;
 
-    // 1. Disable navigation buttons immediately, keep current tooltip and spotlight active
+    // 1. Disable buttons immediately (keep current step content at 100% opacity)
     setIsTransitioning(true);
-    setShowRetryState(false);
-    setIsFeatureUnavailable(false);
-    setFailedStepIndex(null);
 
     const nextStepConfig = tourSteps[nextIndex];
+
+    // Fallback: If navigating to workspace details but no document is active, gracefully skip this step
+    if (nextStepConfig.route && nextStepConfig.route.includes("/documents/:id")) {
+      const docId = activeDocId || sessionStorage.getItem("cleverprep_tour_active_doc_id");
+      if (!docId) {
+        console.log("[Tour] No active document found. Gracefully skipping Workspace step.");
+        setIsTransitioning(false);
+        if (nextIndex < tourSteps.length - 1) {
+          transitionToStep(nextIndex + 1);
+        }
+        return;
+      }
+    }
 
     // 2. Resolve route navigation and navigate immediately
     const targetRoute = resolveRoutePath(nextStepConfig.route);
@@ -58,7 +65,6 @@ export const useTourTransition = (
     const readyStart = performance.now();
     let element = null;
     let isTimedOut = false;
-    let hasRetried = false;
 
     const findTargetElement = async (timeoutMs) => {
       const timeoutPromise = new Promise((resolve) => setTimeout(() => {
@@ -89,31 +95,16 @@ export const useTourTransition = (
     };
 
     if (nextStepConfig.targetSelector) {
-      element = await findTargetElement(8000); // 8-second limit
+      element = await findTargetElement(5000); // 5-second wait
 
-      // Check required vs optional steps rules
+      // Graceful fallback: If target selector cannot be found, silently skip the step
       if (!element) {
-        if (nextStepConfig.required === false) {
-          // Rule: If an optional step cannot be found after 8 seconds, automatically skip it.
-          console.log(`[Tour] Optional step ${nextIndex + 1} target not found. Gracefully skipping.`);
-          setIsTransitioning(false);
-          setIsTooltipFading(false);
-          // Advance to the next step
-          if (nextIndex < tourSteps.length - 1) {
-            transitionToStep(nextIndex + 1);
-          } else {
-            setIsTransitioning(false);
-          }
-          return;
-        } else {
-          // Rule: If a required step cannot be found, retry once automatically.
-          console.log(`[Tour] Required step ${nextIndex + 1} target not found. Retrying once automatically...`);
-          hasRetried = true;
-          isTimedOut = false;
-          // Wait 2 seconds before retry check
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          element = await findTargetElement(4000); // retry up to 4 more seconds
+        console.log(`[Tour] Target ${nextStepConfig.targetSelector} not found. Silently skipping step ${nextIndex + 1}.`);
+        setIsTransitioning(false);
+        if (nextIndex < tourSteps.length - 1) {
+          transitionToStep(nextIndex + 1);
         }
+        return;
       }
     } else {
       // Step has no target selector (e.g. center step)
@@ -122,24 +113,7 @@ export const useTourTransition = (
 
     readyDuration = performance.now() - readyStart;
 
-    // 5. Handle fallback if required step still fails after retry
-    if (nextStepConfig.targetSelector && !element && nextStepConfig.required) {
-      console.warn(`[Tour] Required step ${nextIndex + 1} target still missing after retry.`);
-      setFailedStepIndex(nextIndex);
-      
-      // Update step index to the target failed step so the tooltip shows it
-      setCurrentStepIndex(nextIndex);
-      // Remove spotlight highlight (fall back to center/neutral positioning)
-      setTargetRect(null);
-      
-      // Trigger the inline "preparing" message
-      setIsFeatureUnavailable(true);
-      setIsTooltipFading(false);
-      setIsTransitioning(false); // Enable buttons so they can click "Next"
-      return;
-    }
-
-    // 6. Scroll target into view if outside viewport (before fading content)
+    // 5. Scroll target into view if outside viewport (before content fades out)
     if (element) {
       const scrollStart = performance.now();
       const rect = element.getBoundingClientRect();
@@ -156,18 +130,12 @@ export const useTourTransition = (
           inline: "nearest"
         });
         // Wait for smooth scrolling to complete
-        await new Promise((resolve) => setTimeout(resolve, 400));
+        await new Promise((resolve) => setTimeout(resolve, 350));
       }
       scrollDuration = performance.now() - scrollStart;
     }
 
-    // 7. Fade current tooltip content to opacity 0 (150ms)
-    setIsTooltipFading(true);
-    await new Promise((resolve) => setTimeout(resolve, 150));
-
-    // 8. Swap step variables and morph spotlight coordinates
-    setCurrentStepIndex(nextIndex);
-
+    // 6. Start spotlight morph & tooltip slide by updating target coordinates (GPU accelerated translate3d)
     const spotlightStart = performance.now();
     if (element) {
       const rect = element.getBoundingClientRect();
@@ -180,10 +148,19 @@ export const useTourTransition = (
     } else {
       setTargetRect(null);
     }
+
+    // 7. Simultaneously fade current content out to opacity 0 (150ms)
+    setIsTooltipFading(true);
     
-    // 9. Wait for spotlight morph and tooltip slide/reposition to complete (260ms duration)
+    // 8. Wait for spotlight morph and tooltip slide/reposition to complete (260ms duration)
     await new Promise((resolve) => setTimeout(resolve, 260));
     spotlightDuration = performance.now() - spotlightStart;
+
+    // 9. Swap step content text by updating step index
+    setCurrentStepIndex(nextIndex);
+
+    // Let the positioning adjust to the new dimensions
+    await new Promise((resolve) => setTimeout(resolve, 60));
 
     // 10. Fade new content from opacity 0 to opacity 1 (150ms)
     setIsTooltipFading(false);
@@ -218,19 +195,10 @@ export const useTourTransition = (
     trackAnalytics
   ]);
 
-  const retryTransition = useCallback(async () => {
-    if (failedStepIndex !== null) {
-      await transitionToStep(failedStepIndex);
-    }
-  }, [failedStepIndex, transitionToStep]);
-
   return {
     isTransitioning,
     isTooltipFading,
-    showRetryState,
-    isFeatureUnavailable,
     transitionToStep,
-    retryTransition,
   };
 };
 

@@ -36,7 +36,7 @@ const TourOverlay = () => {
     <>
       {/* Backdrop overlay with SVG mask */}
       <svg 
-        className="fixed inset-0 w-full h-full pointer-events-none z-[90] transition-opacity duration-300"
+        className="fixed inset-0 w-full h-full pointer-events-none z-[90] transition-opacity duration-350"
         style={{ opacity: isBackdropFading ? 0 : 1 }}
       >
         <defs>
@@ -47,9 +47,9 @@ const TourOverlay = () => {
             {/* Black cutout representing the transparent spotlight area */}
             {showSpotlight && (
               <rect
-                className="transition-all duration-[260ms]"
+                className="transition-all duration-[280ms]"
                 style={{
-                  transitionTimingFunction: "cubic-bezier(0.25, 1.25, 0.5, 1)",
+                  transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
                   transitionProperty: "x, y, width, height, rx, ry"
                 }}
                 x={targetRect.left - padding}
@@ -83,12 +83,13 @@ const TourOverlay = () => {
       {/* Pulsing focal border overlay mimicking traveling motion */}
       {showSpotlight && (
         <div
-          className="fixed pointer-events-none z-[91] border-2 border-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.25)] transition-all duration-[260ms]"
+          className="fixed pointer-events-none z-[91] border-2 border-emerald-500/80 shadow-[0_0_15px_rgba(16,185,129,0.25)] transition-all duration-[280ms]"
           style={{
-            transitionTimingFunction: "cubic-bezier(0.25, 1.25, 0.5, 1)",
-            transitionProperty: "top, left, width, height, border-radius, opacity",
-            top: targetRect.top - padding,
-            left: targetRect.left - padding,
+            transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+            transitionProperty: "transform, width, height, border-radius, opacity",
+            top: 0,
+            left: 0,
+            transform: `translate3d(${targetRect.left - padding}px, ${targetRect.top - padding}px, 0)`,
             width: targetRect.width + padding * 2,
             height: targetRect.height + padding * 2,
             borderRadius: targetRect.width === 0 ? "0" : "12px",
