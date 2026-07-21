@@ -18,6 +18,11 @@ import QuizResultPage from './pages/Quizzes/QuizResultPage';
 import QuizTakePage from './pages/Quizzes/QuizTakePage';
 import ProfilePage from './pages/Profile/ProfilePage';
 import SharedChatPage from './pages/SharedChatPage';
+import FocusWorkspacePage from './pages/Focus/FocusWorkspacePage';
+import FocusHistoryPage from './pages/Focus/FocusHistoryPage';
+import FocusAnalyticsPage from './pages/Focus/FocusAnalyticsPage';
+
+import { StudySessionProvider } from './contexts/StudySessionContext';
 
 const App = () => {
   const { isAuthenticated,loading } = useAuth();
@@ -33,8 +38,9 @@ const App = () => {
 
   return (
     <Router>
-      <TourProvider>
-        <Routes>
+      <StudySessionProvider>
+        <TourProvider>
+          <Routes>
           <Route
             path='/'
             element={
@@ -67,11 +73,15 @@ const App = () => {
           <Route path='/quizzes/:quizId' element={<QuizTakePage />} />
           <Route path='/quizzes/:quizId/results' element={<QuizResultPage />} />
           <Route path='/profile' element={<ProfilePage/>}/>
+          <Route path='/focus' element={<FocusWorkspacePage/>}/>
+          <Route path='/focus/history' element={<FocusHistoryPage/>}/>
+          <Route path='/focus/analytics' element={<FocusAnalyticsPage/>}/>
           </Route>
 
           <Route path='*' element={<h1>Not Found</h1>} />
         </Routes>
-      </TourProvider>
+        </TourProvider>
+      </StudySessionProvider>
     </Router>
   );
 };

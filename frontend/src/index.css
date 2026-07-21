@@ -124,3 +124,89 @@
 @utility animate-badge-pulse {
   animation: badge-pulse 2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
+
+/* Timer breathing glow animations */
+@keyframes timer-glow-breathe {
+  0% {
+    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.15));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 24px rgba(16, 185, 129, 0.4));
+    transform: scale(1.015);
+  }
+  100% {
+    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.15));
+    transform: scale(1);
+  }
+}
+
+@utility animate-timer-breathe {
+  animation: timer-glow-breathe 4s ease-in-out infinite;
+}
+
+/* Audio Visualizer Wave Animations */
+@keyframes audio-wave {
+  0% {
+    height: 4px;
+  }
+  100% {
+    height: 16px;
+  }
+}
+
+@utility animate-audio-wave-1 {
+  animation: audio-wave 0.6s ease-in-out infinite alternate;
+}
+
+@utility animate-audio-wave-2 {
+  animation: audio-wave 0.8s ease-in-out infinite alternate 0.15s;
+}
+
+@utility animate-audio-wave-3 {
+  animation: audio-wave 0.7s ease-in-out infinite alternate 0.3s;
+}
+
+/* Hide scrollbar utility */
+@utility scrollbar-hide {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes float-particle {
+  0%, 100% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px) scale(1.2);
+    opacity: 0.6;
+  }
+}
+
+@keyframes timer-breathe {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 15px rgba(16, 210, 143, 0.15));
+  }
+  50% {
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 25px rgba(16, 210, 143, 0.3));
+  }
+}
+
+@utility animate-float-particle-1 {
+  animation: float-particle 6s ease-in-out infinite;
+}
+@utility animate-float-particle-2 {
+  animation: float-particle 8s ease-in-out infinite 2s;
+}
+@utility animate-float-particle-3 {
+  animation: float-particle 10s ease-in-out infinite 4s;
+}
+@utility animate-timer-breathe {
+  animation: timer-breathe 4s ease-in-out infinite;
+}

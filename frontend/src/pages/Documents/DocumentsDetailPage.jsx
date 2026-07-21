@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import documentService from '../../services/documentService';
 import Spinner from '../../components/common/Spinner';
 import toast from 'react-hot-toast';
-import { ArrowLeft, ExternalLink, MessageSquare, Wand2, BookOpen, BrainCircuit, Columns, SidebarClose, LayoutPanelLeft, Headphones } from 'lucide-react';
+import { ArrowLeft, ExternalLink, MessageSquare, Wand2, BookOpen, BrainCircuit, Columns, SidebarClose, LayoutPanelLeft, Headphones, Clock } from 'lucide-react';
 import ChatInterface from '../../components/chat/ChatInterface';
 import AIActions from '../../components/ai/AIActions';
 import ErrorBoundary from '../../components/common/ErrorBoundary';
@@ -12,6 +12,8 @@ import FlashcardManager from '../../components/flashcards/FlashcardManager';
 import QuizManager from '../../components/quizzes/QuizManager';
 import PodcastManager from '../../components/podcast/PodcastManager';
 import { useTour } from '../../context/TourContext';
+import useStudySession from '../../hooks/useStudySession';
+import { SOURCE_DOCUMENT, STATUS_RUNNING } from '../../constants/StudySessionConstants';
 
 const DocumentDetailPage = () => {
   const { currentTabSelection, setCurrentTabSelection } = useTour();
@@ -28,11 +30,63 @@ const DocumentDetailPage = () => {
   };
   const [activeTab, setActiveTab] = useState(getInitialTab());
 
+  const { session, createSession, startSession, updateSession, setIsOverlayOpen } = useStudySession();
+
   useEffect(() => {
     if (currentTabSelection && currentTabSelection !== activeTab) {
       setActiveTab(currentTabSelection);
     }
   }, [currentTabSelection, activeTab]);
+
+  // Synchronize document & activity to active focus session if running
+  useEffect(() => {
+    if (session && session.status === STATUS_RUNNING && document?.data) {
+      let activityType = session.activityType;
+      if (activeTab === "Content") activityType = "Reading PDF";
+      else if (activeTab === "Summary" || activeTab === "Chat") activityType = "Viewing Notes";
+      else if (activeTab === "Flashcards") activityType = "Reviewing Flashcards";
+      else if (activeTab === "Quizzes") activityType = "Taking Quiz";
+      else if (activeTab === "Podcast") activityType = "Listening Podcast";
+
+      if (
+        session.documentId !== document.data._id ||
+        session.activityType !== activityType
+      ) {
+        updateSession({
+          documentId: document.data._id,
+          documentTitle: document.data.title,
+          activityType
+        });
+      }
+    }
+  }, [activeTab, document, session?.status, updateSession]);
+
+  const handleStartFocus = () => {
+    const isSessionActive = session && ["created", "running", "paused"].includes(session.status);
+    if (isSessionActive) {
+      setIsOverlayOpen(true);
+      return;
+    }
+
+    let activityType = "Reading PDF";
+    if (activeTab === "Content") activityType = "Reading PDF";
+    else if (activeTab === "Summary" || activeTab === "Chat") activityType = "Viewing Notes";
+    else if (activeTab === "Flashcards") activityType = "Reviewing Flashcards";
+    else if (activeTab === "Quizzes") activityType = "Taking Quiz";
+    else if (activeTab === "Podcast") activityType = "Listening Podcast";
+
+    createSession({
+      mode: "smart",
+      duration: 1500,
+      documentId: document.data._id,
+      documentTitle: document.data.title,
+      activityType,
+      goal: `Study concept details in ${document.data.title}`,
+      source: SOURCE_DOCUMENT
+    });
+    startSession();
+    setIsOverlayOpen(true);
+  };
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
@@ -129,8 +183,17 @@ const DocumentDetailPage = () => {
           </div>
         </div>
 
-        <div className="hidden md:flex items-center px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600">
-           Study Workspace
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleStartFocus}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold shadow-md shadow-emerald-500/25 transition-all cursor-pointer"
+            title="Start Study Focus Session"
+          >
+            <Clock size={14} /> <span>Focus Mode</span>
+          </button>
+          <div className="hidden md:flex items-center px-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-semibold text-slate-600">
+             Study Workspace
+          </div>
         </div>
 
         {pdfUrl && (

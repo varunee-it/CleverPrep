@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
   LayoutDashboard,
@@ -19,7 +19,10 @@ const Sidebar = ({
 }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
+  const isFocusPage = location.pathname.startsWith("/focus");
 
   const confirmLogout = () => {
     logout();
@@ -56,27 +59,28 @@ const Sidebar = ({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-white border-r border-slate-200/60 z-50 transition-all duration-300 ease-in-out flex flex-col tour-sidebar
-          ${/* Mobile: Slide out drawer */ ""}
+        className={`fixed top-0 left-0 h-full border-r z-50 transition-all duration-300 ease-in-out flex flex-col tour-sidebar
+          ${isFocusPage ? "bg-[#090E18] border-slate-900 text-white" : "bg-white border-slate-200/60 text-slate-900"}
           ${isMobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}
-          ${/* Desktop: Fixed positioning below header */ ""}
           md:translate-x-0 md:relative md:z-0
-          ${isSidebarCollapsed ? "md:w-16" : "md:w-56"}
+          ${isSidebarCollapsed ? "md:w-[72px]" : "md:w-[240px]"}
         `}
       >
-        {/* Mobile Header inside Sidebar (Hidden on Desktop since Header handles it) */}
-        <div className="flex md:hidden items-center justify-between h-14 px-4 border-b border-slate-200/60">
+        {/* Mobile Header inside Sidebar */}
+        <div className={`flex md:hidden items-center justify-between h-14 px-4 border-b ${
+          isFocusPage ? "border-slate-850" : "border-slate-200/60"
+        }`}>
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-7 h-7 rounded-md bg-emerald-500">
               <span className="text-white font-bold text-base leading-none">C</span>
             </div>
-            <h1 className="text-base font-bold text-slate-900 tracking-tight">
+            <h1 className="text-base font-bold tracking-tight">
               CleverPrep
             </h1>
           </div>
           <button
             onClick={toggleMobileMenu}
-            className="text-slate-500 hover:text-slate-800 transition-colors"
+            className="text-slate-500 hover:text-slate-200 transition-colors cursor-pointer"
           >
             <X size={20} />
           </button>
@@ -89,7 +93,6 @@ const Sidebar = ({
               key={link.to}
               to={link.to}
               onClick={() => {
-                // Auto-close on mobile when a link is clicked
                 if (window.innerWidth < 768 && isMobileMenuOpen) {
                   toggleMobileMenu();
                 }
@@ -97,8 +100,12 @@ const Sidebar = ({
               className={({ isActive }) =>
                 `group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4'} py-3 text-sm font-medium rounded-xl transition-all duration-200 relative ${
                   isActive
-                    ? "bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100/50"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:translate-x-0.5"
+                    ? isFocusPage
+                      ? "bg-slate-900/60 text-[#10D28F] border border-slate-850/60"
+                      : "bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100/50"
+                    : isFocusPage
+                      ? "text-slate-400 hover:bg-slate-900/40 hover:text-white border border-transparent"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:translate-x-0.5"
                 } ${
                   link.to === "/documents" ? "tour-sidebar-library" : link.to === "/profile" ? "tour-sidebar-profile" : ""
                 }`
@@ -111,7 +118,13 @@ const Sidebar = ({
                     size={20}
                     strokeWidth={isActive ? 2.25 : 1.75}
                     className={`shrink-0 transition-transform duration-200 ${
-                      isActive ? "text-emerald-600 scale-105" : "text-slate-400 group-hover:text-slate-600 group-hover:scale-105"
+                      isActive 
+                        ? isFocusPage
+                          ? "text-[#10D28F] scale-105"
+                          : "text-emerald-600 scale-105"
+                        : isFocusPage
+                          ? "text-slate-500 group-hover:text-slate-300 group-hover:scale-105"
+                          : "text-slate-400 group-hover:text-slate-655 group-hover:scale-105"
                     }`}
                   />
                   <span
@@ -122,7 +135,9 @@ const Sidebar = ({
                     {link.text}
                   </span>
                   {isActive && !isSidebarCollapsed && (
-                    <span className="absolute right-3 w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className={`absolute right-3 w-1.5 h-1.5 rounded-full animate-pulse ${
+                      isFocusPage ? "bg-[#10D28F]" : "bg-emerald-500"
+                    }`} />
                   )}
                 </>
               )}
@@ -131,16 +146,22 @@ const Sidebar = ({
         </div>
 
         {/* Bottom Section (Logout) */}
-        <div className="p-3 border-t border-slate-100">
+        <div className={`p-3 border-t ${isFocusPage ? "border-slate-900" : "border-slate-100"}`}>
           <button
             onClick={() => setIsLogoutModalOpen(true)}
-            className={`group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4'} py-3 w-full text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100/50 rounded-xl transition-all duration-200 border border-transparent hover:translate-x-0.5`}
+            className={`group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4'} py-3 w-full text-sm font-medium rounded-xl transition-all duration-200 border border-transparent cursor-pointer ${
+              isFocusPage
+                ? "text-slate-400 hover:bg-slate-900/40 hover:text-white"
+                : "text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100/50 hover:translate-x-0.5"
+            }`}
             title={isSidebarCollapsed ? "Logout" : ""}
           >
             <LogOut
               size={20}
               strokeWidth={1.75}
-              className="shrink-0 transition-transform duration-200 group-hover:text-red-600 group-hover:scale-105"
+              className={`shrink-0 transition-transform duration-200 ${
+                isFocusPage ? "text-slate-500 group-hover:text-white" : "group-hover:text-red-600 group-hover:scale-105"
+              }`}
             />
             <span
               className={`ml-3.5 whitespace-nowrap font-medium transition-all duration-200 ${
@@ -160,7 +181,9 @@ const Sidebar = ({
           onClick={() => setIsLogoutModalOpen(false)}
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200"
+            className={`rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200 border ${
+              isFocusPage ? "bg-slate-950 border-slate-850 text-white" : "bg-white border-slate-200 text-slate-905"
+            }`}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -170,10 +193,10 @@ const Sidebar = ({
               <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-5 shadow-sm border border-red-100">
                 <AlertCircle className="w-8 h-8 text-red-500" strokeWidth={2} />
               </div>
-              <h3 id="logout-modal-title" className="text-xl font-bold text-slate-900 mb-3">
+              <h3 id="logout-modal-title" className="text-xl font-bold mb-3">
                 Log out of CleverPrep?
               </h3>
-              <p className="text-sm text-slate-500 leading-relaxed mb-8">
+              <p className={`text-sm leading-relaxed mb-8 ${isFocusPage ? "text-slate-400" : "text-slate-500"}`}>
                 Your study materials, flashcards, quizzes, and progress will remain safely stored in your account.
                 <br /><br />
                 Logging out will not delete any of your data. Simply sign in again to continue learning from where you left off.
@@ -182,7 +205,11 @@ const Sidebar = ({
               <div className="flex flex-col sm:flex-row w-full gap-3">
                 <button
                   onClick={() => setIsLogoutModalOpen(false)}
-                  className="flex-1 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-slate-200"
+                  className={`flex-1 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${
+                    isFocusPage 
+                      ? "bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-850 focus:ring-slate-800"
+                      : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 focus:ring-slate-200"
+                  }`}
                   autoFocus
                 >
                   Cancel
