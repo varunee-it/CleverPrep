@@ -39,6 +39,16 @@ const Sidebar = ({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isLogoutModalOpen]);
 
+  const [globalTheme, setGlobalTheme] = useState(() => localStorage.getItem("cleverprep_global_theme") || "white");
+
+  useEffect(() => {
+    const handleThemeChange = () => {
+      setGlobalTheme(localStorage.getItem("cleverprep_global_theme") || "white");
+    };
+    window.addEventListener("cleverprep-global-theme-changed", handleThemeChange);
+    return () => window.removeEventListener("cleverprep-global-theme-changed", handleThemeChange);
+  }, []);
+
   const navLinks = [
     { to: "/dashboard", icon: LayoutDashboard, text: "Home" },
     { to: "/documents", icon: FileText, text: "Library" },
@@ -60,15 +70,23 @@ const Sidebar = ({
       {/* Sidebar Container */}
       <aside
         className={`fixed top-0 left-0 h-full border-r z-50 transition-all duration-300 ease-in-out flex flex-col tour-sidebar
-          ${isFocusPage ? "bg-[#090E18] border-slate-900 text-white" : "bg-white border-slate-200/60 text-slate-900"}
+          ${
+            globalTheme === "black" ? "bg-[#090E18] border-slate-900 text-white" :
+            globalTheme === "beige" ? "bg-[#FFFDF9] border-[#EADFC9] text-[#433422]" :
+            globalTheme === "lavender" ? "bg-white border-[#E5DEFF] text-[#3B2D54]" :
+            "bg-white border-slate-200/60 text-slate-900"
+          }
           ${isMobileMenuOpen ? "translate-x-0 w-64" : "-translate-x-full w-64"}
           md:translate-x-0 md:relative md:z-0
-          ${isSidebarCollapsed ? "md:w-[72px]" : "md:w-[240px]"}
+          ${isSidebarCollapsed ? "md:w-[72px]" : "md:w-[260px]"}
         `}
       >
         {/* Mobile Header inside Sidebar */}
         <div className={`flex md:hidden items-center justify-between h-14 px-4 border-b ${
-          isFocusPage ? "border-slate-850" : "border-slate-200/60"
+          globalTheme === "black" ? "border-slate-850" :
+          globalTheme === "beige" ? "border-[#EADFC9]" :
+          globalTheme === "lavender" ? "border-[#E5DEFF]" :
+          "border-slate-200/60"
         }`}>
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-7 h-7 rounded-md bg-emerald-500">
@@ -80,7 +98,7 @@ const Sidebar = ({
           </div>
           <button
             onClick={toggleMobileMenu}
-            className="text-slate-500 hover:text-slate-200 transition-colors cursor-pointer"
+            className="text-slate-550 hover:text-slate-205 transition-colors cursor-pointer"
           >
             <X size={20} />
           </button>
@@ -98,14 +116,22 @@ const Sidebar = ({
                 }
               }}
               className={({ isActive }) =>
-                `group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4'} py-3 text-sm font-medium rounded-xl transition-all duration-200 relative ${
+                `group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4.5'} py-3.5 text-sm font-medium rounded-xl transition-all duration-200 relative ${
                   isActive
-                    ? isFocusPage
+                    ? globalTheme === "black"
                       ? "bg-slate-900/60 text-[#10D28F] border border-slate-850/60"
-                      : "bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100/50"
-                    : isFocusPage
+                      : globalTheme === "beige"
+                        ? "bg-[#FAF0D9] text-[#8C6D34] border border-[#B89D6C]/50"
+                        : globalTheme === "lavender"
+                          ? "bg-[#F5F3FF] text-[#7C3AED] border border-[#C7D2FE]/50"
+                          : "bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100/50"
+                    : globalTheme === "black"
                       ? "text-slate-400 hover:bg-slate-900/40 hover:text-white border border-transparent"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent hover:translate-x-0.5"
+                      : globalTheme === "beige"
+                        ? "text-[#7A6C58] hover:bg-[#FAF6EE] hover:text-[#433422] border border-transparent hover:translate-x-0.5"
+                        : globalTheme === "lavender"
+                          ? "text-[#6A5A8C] hover:bg-[#FAF9FF] hover:text-[#2E1F47] border border-transparent hover:translate-x-0.5"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-905 border border-transparent hover:translate-x-0.5"
                 } ${
                   link.to === "/documents" ? "tour-sidebar-library" : link.to === "/profile" ? "tour-sidebar-profile" : ""
                 }`
@@ -115,16 +141,24 @@ const Sidebar = ({
               {({ isActive }) => (
                 <>
                   <link.icon
-                    size={20}
+                    size={21}
                     strokeWidth={isActive ? 2.25 : 1.75}
                     className={`shrink-0 transition-transform duration-200 ${
                       isActive 
-                        ? isFocusPage
+                        ? globalTheme === "black"
                           ? "text-[#10D28F] scale-105"
-                          : "text-emerald-600 scale-105"
-                        : isFocusPage
+                          : globalTheme === "beige"
+                            ? "text-[#8C6D34] scale-105"
+                            : globalTheme === "lavender"
+                              ? "text-[#7C3AED] scale-105"
+                              : "text-emerald-600 scale-105"
+                        : globalTheme === "black"
                           ? "text-slate-500 group-hover:text-slate-300 group-hover:scale-105"
-                          : "text-slate-400 group-hover:text-slate-655 group-hover:scale-105"
+                          : globalTheme === "beige"
+                            ? "text-[#9B8C77] group-hover:text-[#433422] group-hover:scale-105"
+                            : globalTheme === "lavender"
+                              ? "text-[#9585BA] group-hover:text-[#2E1F47] group-hover:scale-105"
+                              : "text-slate-400 group-hover:text-slate-655 group-hover:scale-105"
                     }`}
                   />
                   <span
@@ -136,7 +170,10 @@ const Sidebar = ({
                   </span>
                   {isActive && !isSidebarCollapsed && (
                     <span className={`absolute right-3 w-1.5 h-1.5 rounded-full animate-pulse ${
-                      isFocusPage ? "bg-[#10D28F]" : "bg-emerald-500"
+                      globalTheme === "black" ? "bg-[#10D28F]" :
+                      globalTheme === "beige" ? "bg-[#8C6D34]" :
+                      globalTheme === "lavender" ? "bg-[#7C3AED]" :
+                      "bg-emerald-550"
                     }`} />
                   )}
                 </>
@@ -146,21 +183,33 @@ const Sidebar = ({
         </div>
 
         {/* Bottom Section (Logout) */}
-        <div className={`p-3 border-t ${isFocusPage ? "border-slate-900" : "border-slate-100"}`}>
+        <div className={`p-3 border-t ${
+          globalTheme === "black" ? "border-slate-900" :
+          globalTheme === "beige" ? "border-[#EADFC9]" :
+          globalTheme === "lavender" ? "border-[#E5DEFF]" :
+          "border-slate-100"
+        }`}>
           <button
             onClick={() => setIsLogoutModalOpen(true)}
-            className={`group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4'} py-3 w-full text-sm font-medium rounded-xl transition-all duration-200 border border-transparent cursor-pointer ${
-              isFocusPage
+            className={`group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4.5'} py-3.5 w-full text-sm font-medium rounded-xl transition-all duration-200 border border-transparent cursor-pointer ${
+              globalTheme === "black"
                 ? "text-slate-400 hover:bg-slate-900/40 hover:text-white"
-                : "text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-100/50 hover:translate-x-0.5"
+                : globalTheme === "beige"
+                  ? "text-[#7A6C58] hover:bg-[#FAF6EE] hover:text-[#433422]"
+                  : globalTheme === "lavender"
+                    ? "text-[#6A5A8C] hover:bg-[#FAF9FF] hover:text-[#2E1F47]"
+                    : "text-slate-650 hover:bg-red-50 hover:text-red-600 hover:border-red-100/50 hover:translate-x-0.5"
             }`}
             title={isSidebarCollapsed ? "Logout" : ""}
           >
             <LogOut
-              size={20}
+              size={21}
               strokeWidth={1.75}
               className={`shrink-0 transition-transform duration-200 ${
-                isFocusPage ? "text-slate-500 group-hover:text-white" : "group-hover:text-red-600 group-hover:scale-105"
+                globalTheme === "black" ? "text-slate-500 group-hover:text-white" :
+                globalTheme === "beige" ? "text-[#9B8C77] group-hover:text-[#433422]" :
+                globalTheme === "lavender" ? "text-[#9585BA] group-hover:text-[#2E1F47]" :
+                "group-hover:text-red-600 group-hover:scale-105"
               }`}
             />
             <span
@@ -181,9 +230,7 @@ const Sidebar = ({
           onClick={() => setIsLogoutModalOpen(false)}
         >
           <div 
-            className={`rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200 border ${
-              isFocusPage ? "bg-slate-950 border-slate-850 text-white" : "bg-white border-slate-200 text-slate-905"
-            }`}
+            className="rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-200 border bg-bg-surface border-border text-text-primary"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -196,7 +243,7 @@ const Sidebar = ({
               <h3 id="logout-modal-title" className="text-xl font-bold mb-3">
                 Log out of CleverPrep?
               </h3>
-              <p className={`text-sm leading-relaxed mb-8 ${isFocusPage ? "text-slate-400" : "text-slate-500"}`}>
+              <p className="text-sm leading-relaxed mb-8 text-text-secondary">
                 Your study materials, flashcards, quizzes, and progress will remain safely stored in your account.
                 <br /><br />
                 Logging out will not delete any of your data. Simply sign in again to continue learning from where you left off.
@@ -205,11 +252,7 @@ const Sidebar = ({
               <div className="flex flex-col sm:flex-row w-full gap-3">
                 <button
                   onClick={() => setIsLogoutModalOpen(false)}
-                  className={`flex-1 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors focus:outline-none focus:ring-2 ${
-                    isFocusPage 
-                      ? "bg-slate-900 border border-slate-800 text-slate-300 hover:bg-slate-850 focus:ring-slate-800"
-                      : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 focus:ring-slate-200"
-                  }`}
+                  className="flex-1 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors focus:outline-none focus:ring-2 bg-bg-base border border-border text-text-secondary hover:bg-bg-surface-hover focus:ring-border-hover"
                   autoFocus
                 >
                   Cancel

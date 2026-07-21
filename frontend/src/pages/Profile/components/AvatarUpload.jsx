@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import authService from "../../../services/authService";
 import toast from "react-hot-toast";
@@ -81,7 +81,25 @@ const AvatarUpload = ({ isGoogleUser }) => {
     }
   };
 
-  const avatarSrc = previewUrl || user?.profileImage || user?.avatar;
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [user, previewUrl]);
+
+  const getAvatarUrl = () => {
+    if (previewUrl) return previewUrl;
+    const rawSrc = user?.profileImage || user?.avatar;
+    if (!rawSrc) return null;
+    if (rawSrc.startsWith("http://") || rawSrc.startsWith("https://")) {
+      return rawSrc;
+    }
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5050";
+    const cleanPath = rawSrc.startsWith("/") ? rawSrc : `/${rawSrc}`;
+    return `${baseUrl}${cleanPath}`;
+  };
+
+  const avatarSrc = !imgError ? getAvatarUrl() : null;
   const showRemoveButton = !isGoogleUser && (user?.profileImage || previewUrl);
 
   return (
@@ -101,13 +119,7 @@ const AvatarUpload = ({ isGoogleUser }) => {
               src={avatarSrc} 
               alt="Avatar preview" 
               className="w-full h-full object-cover"
-              onError={(e) => {
-                // Handle broken images gracefully
-                e.target.onerror = null;
-                e.target.style.display = 'none';
-                e.target.parentNode.classList.add('bg-gradient-to-br', 'from-emerald-400', 'to-teal-500', 'text-white');
-                e.target.parentNode.innerHTML = `<span>${getInitials()}</span>`;
-              }}
+              onError={() => setImgError(true)}
             />
           ) : (
             <span>{getInitials()}</span>

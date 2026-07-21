@@ -72,11 +72,10 @@ const getQuizResults = async (quizId) => {
 
     return response.data;
   } catch (error) {
-    throw (
-      error.response?.data || {
-        message: "Failed to fetch quiz results",
-      }
-    );
+    throw {
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || "Failed to fetch quiz results",
+    };
   }
 };
 

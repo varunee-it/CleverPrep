@@ -39,6 +39,16 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const fetchInitiated = useRef(false);
 
+  const [globalTheme, setGlobalTheme] = useState(() => localStorage.getItem("cleverprep_global_theme") || "white");
+
+  useEffect(() => {
+    const handleThemeChange = () => {
+      setGlobalTheme(localStorage.getItem("cleverprep_global_theme") || "white");
+    };
+    window.addEventListener("cleverprep-global-theme-changed", handleThemeChange);
+    return () => window.removeEventListener("cleverprep-global-theme-changed", handleThemeChange);
+  }, []);
+
   useEffect(() => {
     if (fetchInitiated.current) return;
     fetchInitiated.current = true;
@@ -110,7 +120,7 @@ const DashboardPage = () => {
                 Welcome to CleverPrep!
               </h3>
               
-              <p className="text-xs sm:text-sm text-slate-550 leading-relaxed font-semibold mb-8 max-w-sm mx-auto">
+              <p className="text-xs sm:text-sm text-slate-555 leading-relaxed font-semibold mb-8 max-w-sm mx-auto">
                 Transform your textbooks, lecture notes, and PDFs into AI summaries, interactive quizzes, flashcard decks, and revision podcasts.
                 <br /><br />
                 Upload your first document to begin your customized learning path.
@@ -119,7 +129,7 @@ const DashboardPage = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => skipTour()}
-                  className="flex-1 h-11 px-5 border border-slate-200 text-slate-555 hover:text-slate-800 hover:bg-slate-50 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                  className="flex-1 h-11 px-5 border border-slate-200 text-slate-555 hover:text-slate-800 hover:bg-slate-55 rounded-xl text-xs font-bold transition-all cursor-pointer"
                 >
                   Skip
                 </button>
@@ -156,135 +166,143 @@ const DashboardPage = () => {
     focusStorage.saveDailyGoals(updated);
   };
 
+  // Theme variable class definitions using design tokens
+  const pageTextClass = "text-text-primary";
+  const heroWrapperClass = "bg-bg-surface border-border text-text-primary";
+  const heroTitleTextClass = "text-text-primary";
+  const heroMetaTextClass = "text-text-secondary";
+  const continueBtnClass = "bg-primary hover:bg-primary-hover text-primary-text shadow-theme-md";
+  const uploadBtnClass = "bg-bg-base hover:bg-bg-surface-hover text-text-secondary border-border";
+  const cardClass = "bg-bg-surface border-border hover:border-border-hover text-text-primary shadow-theme-sm";
+  const cardTitleClass = "text-text-muted";
+  const cardContentTextClass = "text-text-primary";
+  const cardMetaTextClass = "text-text-secondary";
+  const cardBorderClass = "border-border";
+  const cardListItemBgClass = "hover:bg-bg-surface-hover";
+  const progressTrackBgClass = "bg-bg-base";
+  const openBtnClass = "bg-bg-surface hover:bg-bg-surface-hover text-text-secondary border-border";
+  const streakCardIconBg = "bg-accent/15 border border-accent/30";
+
   return (
-    <div className="max-w-[1500px] mx-auto px-6 md:px-8 py-6 space-y-5 select-none font-display text-slate-850">
+    <div className={`max-w-[1500px] mx-auto px-8 md:px-10 py-7 space-y-6 select-none font-display ${pageTextClass}`}>
       
-      {/* 1. Welcoming Hero Banner - Compact & Spacing Optimized */}
-      <div className="relative rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 p-5 text-white shadow-md overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/10 via-white/5 to-transparent pointer-events-none" />
+      {/* 1. Calm, Premium Workspace Header */}
+      <div className={`relative rounded-2xl p-6 shadow-xs overflow-hidden flex flex-col md:flex-row items-center justify-between gap-5 border ${heroWrapperClass}`}>
+        <div className="absolute inset-0 bg-slate-50/10 pointer-events-none" />
         
         <div className="space-y-1 relative z-10 text-center md:text-left">
-          <h1 className="text-lg sm:text-xl font-extrabold tracking-tight font-display flex items-center justify-center md:justify-start gap-1.5 leading-snug">
+          <h1 className={`text-xl sm:text-2xl font-extrabold tracking-tight leading-snug flex items-center justify-center md:justify-start gap-1.5 ${heroTitleTextClass}`}>
             Good Evening, {displayName} 👋
           </h1>
           {activeDocument ? (
-            <p className="text-emerald-50 text-xs font-semibold leading-relaxed">
-              Continue learning <span className="font-bold underline">{activeDocument.title}</span>
+            <p className={`text-[13px] font-semibold leading-relaxed ${heroMetaTextClass}`}>
+              Active flow: Continue learning <span className="font-bold underline text-slate-800">{activeDocument.title}</span>
             </p>
           ) : (
-            <p className="text-emerald-50 text-xs font-semibold leading-relaxed">
-              Start your learning journey by studying a PDF notes document.
+            <p className={`text-[13px] font-semibold leading-relaxed ${heroMetaTextClass}`}>
+              Start your study flow by uploading a PDF notes document.
             </p>
           )}
-          {activeDocument && (
-            <p className="text-[10px] text-emerald-100/70 font-semibold leading-none">
-              Last Activity • {moment(activeDocument.lastAccessed || activeDocument.createdAt).fromNow()}
-            </p>
-          )}
+          
+          <div className="flex items-center justify-center md:justify-start gap-3 mt-1.5 text-[10px] font-bold uppercase tracking-wider select-none text-slate-400">
+            <span className="flex items-center gap-1">🔥 {stats.currentStreak || 0}d Streak</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
+            <span className="flex items-center gap-1">⏱️ {dashboardData.focusMinutesToday || 0}m logged today</span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 relative z-10">
+        <div className="flex items-center gap-2.5 shrink-0 relative z-10">
           {activeDocument && (
             <Link
               to={`/documents/${activeDocument._id}`}
-              className="flex items-center justify-center gap-1 px-4 h-9 bg-white text-emerald-700 hover:text-emerald-800 rounded-xl font-bold text-xs shadow-xs hover:shadow-sm transition-all"
+              className={`flex items-center justify-center gap-1.5 px-5 h-11 rounded-xl font-bold text-xs transition-all hover:scale-[1.015] shadow-md ${continueBtnClass}`}
             >
-              <Play className="w-3.5 h-3.5 fill-current" />
+              <Play className="w-3.5 h-3.5 fill-current text-white" />
               <span>Continue Learning</span>
             </Link>
           )}
           <Link
             to="/documents"
-            className="flex items-center justify-center gap-1.5 px-4 h-9 bg-emerald-700/30 border border-white/20 text-white hover:bg-emerald-700/50 rounded-xl font-bold text-xs shadow-xs transition-all"
+            className={`flex items-center justify-center gap-1.5 px-5 h-11 rounded-xl font-bold text-xs border shadow-xs transition-all hover:scale-[1.015] ${uploadBtnClass}`}
           >
-            <Plus className="w-4 h-4" strokeWidth={2.5} />
+            <Plus className="w-4.5 h-4.5" strokeWidth={2.5} />
             <span>Upload Document</span>
           </Link>
         </div>
       </div>
 
-      {/* 2. Compact Statistics Dashboard Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 select-none">
-        {[
-          { title: "Today's Study", value: `${dashboardData.focusMinutesToday || 0} mins`, desc: "Focused block logged today", color: "text-emerald-600", icon: <Clock className="w-4 h-4 text-emerald-500" /> },
-          { title: "Current Streak", value: `${stats.currentStreak || 0} days`, desc: "Streaks consistency calendar", color: "text-amber-500", icon: <Zap className="w-4 h-4 text-amber-500 animate-pulse" /> },
-          { title: "Documents", value: overview.totalDocuments || 0, desc: "PDF files in library uploads", color: "text-blue-500", icon: <FileText className="w-4 h-4 text-blue-500" /> },
-          { title: "Average Score", value: `${overview.averageScore || 0}%`, desc: "Quiz accuracy metric", color: "text-indigo-600", icon: <Award className="w-4 h-4 text-indigo-500" /> }
-        ].map((stat, idx) => (
-          <div key={idx} className="bg-white border border-slate-200/85 p-3.5 rounded-xl shadow-xs text-left flex items-start justify-between hover:border-slate-300 transition-all duration-200">
-            <div>
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block leading-none">{stat.title}</span>
-              <span className={`text-base font-extrabold font-mono block mt-1.5 leading-none ${stat.color}`}>{stat.value}</span>
-              <span className="text-[8px] text-slate-450 mt-1 block font-semibold leading-relaxed">{stat.desc}</span>
-            </div>
-            <div className="shrink-0 mt-0.5">{stat.icon}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* 3. Three-Column Dense Responsive Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start select-none">
+      {/* 2. Cohesive Grid Layout: Left Study Block, Right Analytics panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start select-none">
         
-        {/* Column 1: Recent Documents, Activity List, Quick Actions (5 cols) */}
-        <div className="lg:col-span-5 space-y-4">
+        {/* Left Column: Smart Focus Space, Recent learning activity, Quick Actions (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
           
-          {/* Recent Documents Table Card */}
-          <div className="bg-white border border-slate-200/85 rounded-xl p-4 text-left shadow-xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2">
-              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Recent Documents</h3>
-              <Link to="/documents" className="text-[9px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest flex items-center gap-0.5">
+          {/* Smart Focus centerpiece (attracts primary attention) */}
+          <FocusDashboardCard />
+
+          {/* Recent documents activity */}
+          <div className={`rounded-xl p-5 text-left border ${cardClass}`}>
+            <div className={`flex items-center justify-between border-b pb-2 mb-3 ${cardBorderClass}`}>
+              <span className={`text-[11px] font-black uppercase tracking-widest ${cardTitleClass}`}>Recent Activity</span>
+              <Link to="/documents" className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest flex items-center gap-0.5">
                 <span>+ View All</span>
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </Link>
             </div>
             
             {recentDocs.length > 0 ? (
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {recentDocs.slice(0, 3).map((doc) => (
-                  <div key={doc._id} className="flex items-center justify-between gap-3 p-1 rounded-lg hover:bg-slate-50 transition-colors group">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <FileText className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 shrink-0" />
+                  <div key={doc._id} className={`flex items-center justify-between gap-4 p-1.5 rounded-lg transition-colors group ${cardListItemBgClass}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8.5 h-8.5 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-emerald-600 group-hover:bg-emerald-50 transition-colors">
+                        <FileText className="w-4.5 h-4.5" />
+                      </div>
                       <div className="min-w-0">
-                        <h4 className="text-xs font-extrabold text-slate-800 truncate max-w-[170px] group-hover:text-emerald-700" title={doc.title}>
+                        <h4 className={`text-[13px] font-extrabold truncate max-w-[280px] group-hover:text-emerald-700 ${cardContentTextClass}`} title={doc.title}>
                           {doc.title || "Untitled Document"}
                         </h4>
-                        <span className="text-[9px] text-slate-400 font-bold block">
-                          Opened {moment(doc.lastAccessed || doc.createdAt).fromNow()}
+                        <span className={`text-[10px] font-bold block ${cardMetaTextClass}`}>
+                          Last opened • {moment(doc.lastAccessed || doc.createdAt).fromNow()}
                         </span>
                       </div>
                     </div>
-                    <Link 
-                      to={`/documents/${doc._id}`}
-                      className="px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-emerald-650 font-bold text-[9px] rounded-lg border border-slate-200/60 tracking-wider uppercase transition-colors shrink-0"
-                    >
-                      Open
-                    </Link>
+                    
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider px-2 py-0.5 bg-slate-100 rounded-md">Active</span>
+                      <Link 
+                        to={`/documents/${doc._id}`}
+                        className={`px-3.5 py-1.5 font-bold text-[10px] rounded-lg tracking-wider uppercase transition-all shadow-xs ${openBtnClass}`}
+                      >
+                        Open
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-[10px] text-slate-450 italic py-2">No library files uploaded.</p>
+              <p className={`text-[11px] italic py-2 ${cardMetaTextClass}`}>No library files uploaded.</p>
             )}
           </div>
 
-          {/* Quick Actions Panel */}
-          <div className="bg-white border border-slate-200/85 rounded-xl p-4 text-left shadow-xs">
-            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-100 pb-2 mb-3">
-              Quick Actions Channels
+          {/* Quick Actions Launcher Grid */}
+          <div className={`rounded-xl p-5 text-left border ${cardClass}`}>
+            <h3 className={`text-[11px] font-black uppercase tracking-widest border-b pb-2 mb-3 ${cardBorderClass}`}>
+              Productivity Launcher
             </h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {[
-                { label: "Read PDF Summary", icon: <FileText className="w-3.5 h-3.5 text-blue-500" />, path: "/documents" },
-                { label: "Active Flashcards", icon: <BookOpen className="w-3.5 h-3.5 text-indigo-500" />, path: "/flashcards" },
-                { label: "Revision Podcast", icon: <Headphones className="w-3.5 h-3.5 text-emerald-500" />, path: "/documents" },
-                { label: "Practice Quizzes", icon: <BrainCircuit className="w-3.5 h-3.5 text-purple-500" />, path: "/documents" },
-                { label: "Study Note Book", icon: <Bookmark className="w-3.5 h-3.5 text-orange-500" />, path: "/documents" },
-                { label: "Focus Workspace", icon: <Clock className="w-3.5 h-3.5 text-[#10D28F]" />, path: "/focus" }
+                { label: "Read Summary", icon: <FileText className="w-4 h-4 text-blue-500" />, path: "/documents" },
+                { label: "Flashcards", icon: <BookOpen className="w-4 h-4 text-indigo-500" />, path: "/flashcards" },
+                { label: "Listen Podcast", icon: <Headphones className="w-4 h-4 text-emerald-500" />, path: "/documents" },
+                { label: "Practice Quiz", icon: <BrainCircuit className="w-4 h-4 text-purple-500" />, path: "/documents" },
+                { label: "Study Notes", icon: <Bookmark className="w-4 h-4 text-orange-500" />, path: "/documents" },
+                { label: "Focus Workspace", icon: <Clock className="w-4 h-4 text-[#10D28F]" />, path: "/focus" }
               ].map((act, idx) => (
                 <Link
                   key={idx}
                   to={act.path}
-                  className="flex items-center gap-2.5 px-3 h-10 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200/40 hover:border-slate-350 transition-all hover:scale-[1.01] hover:-translate-y-px duration-250 cursor-pointer"
+                  className={`flex items-center gap-3 px-4 h-12 font-bold text-[13px] rounded-xl border transition-all hover:scale-[1.01] hover:-translate-y-px duration-250 cursor-pointer ${openBtnClass}`}
                 >
                   {act.icon}
                   <span>{act.label}</span>
@@ -295,22 +313,38 @@ const DashboardPage = () => {
 
         </div>
 
-        {/* Column 2: Focus Study Session Widget (4 cols) */}
-        <div className="lg:col-span-4 space-y-4">
-          <FocusDashboardCard />
-        </div>
-
-        {/* Column 3: Daily Progress & Streaks Stats Card (3 cols) */}
-        <div className="lg:col-span-3 space-y-4">
+        {/* Right Column: Unified Study Progress, Daily Targets, Streaks Analytics (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
           
-          {/* Daily Goals Panel */}
-          <div className="bg-white border border-slate-200/85 rounded-xl p-4 text-left shadow-xs">
-            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 mb-3 border-b border-slate-100 pb-2">
-              <Target className="w-3.5 h-3.5 text-[#10D28F]" />
-              <span>Daily Study Targets</span>
+          {/* Unified Study Progress Panel (combines kpis + goals) */}
+          <div className={`rounded-xl p-5 shadow-xs text-left border ${cardClass}`}>
+            <h3 className={`text-[11px] font-black uppercase tracking-widest border-b pb-2 mb-3 ${cardBorderClass}`}>
+              Study Progress
             </h3>
+            
+            {/* Unified KPI Grid */}
+            <div className={`grid grid-cols-2 gap-4 pb-4 border-b mb-4 select-none ${cardBorderClass}`}>
+              <div className="text-left">
+                <span className={`text-[10px] font-bold uppercase tracking-wider block ${cardTitleClass}`}>Today's Focus</span>
+                <span className={`text-base font-extrabold font-mono block mt-1 ${cardContentTextClass}`}>{dashboardData.focusMinutesToday || 0}m</span>
+              </div>
+              <div className={`text-left border-l pl-4 ${cardBorderClass}`}>
+                <span className={`text-[10px] font-bold uppercase tracking-wider block ${cardTitleClass}`}>Current Streak</span>
+                <span className="text-base font-extrabold font-mono text-amber-500 block mt-1">{stats.currentStreak || 0}d</span>
+              </div>
+              <div className={`text-left pt-2 border-t ${cardBorderClass}`}>
+                <span className={`text-[10px] font-bold uppercase tracking-wider block ${cardTitleClass}`}>Documents</span>
+                <span className={`text-base font-extrabold font-mono block mt-1 ${cardContentTextClass}`}>{overview.totalDocuments || 0}</span>
+              </div>
+              <div className={`text-left pt-2 border-t border-l pl-4 ${cardBorderClass}`}>
+                <span className={`text-[10px] font-bold uppercase tracking-wider block ${cardTitleClass}`}>Avg Score</span>
+                <span className={`text-base font-extrabold font-mono block mt-1 ${cardContentTextClass}`}>{overview.averageScore || 0}%</span>
+              </div>
+            </div>
 
-            <div className="space-y-3">
+            {/* Daily Goals Progress Bars */}
+            <div className="space-y-3.5 select-none">
+              <span className={`text-[10px] font-black uppercase tracking-widest block mb-2.5 ${cardTitleClass}`}>Daily Targets Progress</span>
               {[
                 { label: "Duration Studied (mins)", key: "minutesCompleted", completed: goals.minutesCompleted || 0, target: goals.minutesTarget || 120 },
                 { label: "Sessions Completed", key: "sessionsCompleted", completed: goals.sessionsCompleted || 0, target: goals.sessionsTarget || 4 },
@@ -319,9 +353,9 @@ const DashboardPage = () => {
               ].map((goal, idx) => {
                 const rate = Math.round((goal.completed / goal.target) * 100);
                 return (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between items-center text-[9px] font-bold text-slate-500 leading-none">
-                      <span>{goal.label}</span>
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 leading-none">
+                      <span className={cardMetaTextClass}>{goal.label}</span>
                       <button 
                         onClick={() => handleGoalToggle(goal.key, goal.completed, goal.target)}
                         className={`cursor-pointer transition-all hover:text-slate-800 ${rate >= 100 ? "text-[#10D28F]" : ""}`}
@@ -330,7 +364,7 @@ const DashboardPage = () => {
                         {goal.completed}/{goal.target}
                       </button>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                    <div className={`w-full rounded-full h-1.5 overflow-hidden ${progressTrackBgClass}`}>
                       <div 
                         className="bg-gradient-to-r from-emerald-500 to-teal-500 h-full rounded-full transition-all duration-300"
                         style={{ width: `${Math.min(100, rate)}%` }}
@@ -342,21 +376,21 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Streaks Analytics */}
-          <div className="bg-white border border-slate-200/85 rounded-xl p-4 text-left shadow-xs flex flex-col justify-between min-h-[100px]">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 mb-2.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
+          {/* Compact Streak canopy card */}
+          <div className={`rounded-xl p-5 text-left shadow-xs flex flex-col justify-between min-h-[110px] border ${cardClass}`}>
+            <span className={`text-[11px] font-black uppercase tracking-widest flex items-center gap-1.5 mb-2.5 ${cardTitleClass}`}>
+              <Zap className="w-4 h-4 text-amber-500" />
               <span>Streaks Canopy</span>
             </span>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl select-none">🔥</span>
+            <div className="flex items-center gap-3.5">
+              <span className="text-3xl select-none">🔥</span>
               <div>
-                <h4 className="text-xs font-extrabold text-slate-850 leading-tight">
-                  Streaks Consistency: {stats.longestStreak || 0} days
+                <h4 className={`text-[13px] font-extrabold leading-tight ${cardContentTextClass}`}>
+                  Consistency Streak: {stats.currentStreak || 0}d
                 </h4>
-                <p className="text-[8px] text-slate-450 mt-1 font-semibold leading-relaxed">
-                  Longest consecutive daily completed blocks logged. Keep study rhythms aligned!
-                </p>
+                <span className={`text-[10px] mt-1 font-semibold leading-relaxed block ${cardMetaTextClass}`}>
+                  Your longest recorded streak is {stats.longestStreak || 0} days. Keep focus rhythms active!
+                </span>
               </div>
             </div>
           </div>

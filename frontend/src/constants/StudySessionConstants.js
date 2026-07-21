@@ -12,7 +12,7 @@ export const ACTIVITY_NOTES = "Viewing Notes";
 export const ACTIVITY_FLASHCARDS = "Reviewing Flashcards";
 export const ACTIVITY_QUIZ = "Taking Quiz";
 export const ACTIVITY_PODCAST = "Listening Podcast";
-export const ACTIVITY_QUICK = "Quick Focus";
+export const ACTIVITY_QUICK = "Study Session";
 
 // Launch sources tracking
 export const SOURCE_DASHBOARD = "dashboard";

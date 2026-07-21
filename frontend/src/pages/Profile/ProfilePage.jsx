@@ -19,6 +19,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [imgError, setImgError] = useState(false);
 
   // Active section tab: 'account' | 'security' | 'notifications' | 'statistics' | 'settings'
   const [activeSection, setActiveSection] = useState("account");
@@ -29,6 +30,10 @@ const ProfilePage = () => {
       setActiveSection(activeStep.profileSection);
     }
   }, [activeStep]);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [user]);
 
   const isGoogleUser = user?.provider === "google";
 
@@ -70,7 +75,18 @@ const ProfilePage = () => {
     return user.username.slice(0, 2).toUpperCase();
   };
 
-  const avatarSrc = user?.profileImage || user?.avatar;
+  const getAvatarUrl = () => {
+    const rawSrc = user?.profileImage || user?.avatar;
+    if (!rawSrc) return null;
+    if (rawSrc.startsWith("http://") || rawSrc.startsWith("https://")) {
+      return rawSrc;
+    }
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5050";
+    const cleanPath = rawSrc.startsWith("/") ? rawSrc : `/${rawSrc}`;
+    return `${baseUrl}${cleanPath}`;
+  };
+
+  const avatarSrc = !imgError ? getAvatarUrl() : null;
 
   return (
     <div className="max-w-5xl mx-auto pb-12 relative z-10 space-y-8 animate-in fade-in duration-300">
@@ -86,12 +102,7 @@ const ProfilePage = () => {
               src={avatarSrc}
               alt="Profile"
               className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.style.display = 'none';
-                e.target.parentNode.classList.add('bg-gradient-to-br', 'from-emerald-400', 'to-teal-500', 'text-white');
-                e.target.parentNode.innerHTML = `<span>${getInitials()}</span>`;
-              }}
+              onError={() => setImgError(true)}
             />
           ) : (
             <span>{getInitials()}</span>

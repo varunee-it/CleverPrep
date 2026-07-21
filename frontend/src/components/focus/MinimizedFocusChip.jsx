@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useStudySession from "../../hooks/useStudySession";
 import useStudyTimer from "../../hooks/useStudyTimer";
@@ -23,6 +23,150 @@ export const MinimizedFocusChip = () => {
 
   const isSessionActive = session && [STATUS_RUNNING, STATUS_PAUSED].includes(session.status);
   
+  // Floating position persistence
+  const [position, setPosition] = useState(() => {
+    const saved = localStorage.getItem("cleverprep_miniplayer_position");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [isDragging, setIsDragging] = useState(false);
+  const [hasMoved, setHasMoved] = useState(false);
+
+  // Initialize default position dynamically inside viewport
+  useEffect(() => {
+    if (!position) {
+      const x = window.innerWidth - 270 - 24; // 24px right gutter
+      const y = window.innerHeight - 68 - 24; // 24px bottom gutter
+      setPosition({ x, y });
+    }
+  }, [position]);
+
+  // Persist position shifts
+  useEffect(() => {
+    if (position) {
+      localStorage.setItem("cleverprep_miniplayer_position", JSON.stringify(position));
+    }
+  }, [position]);
+
+  // Constrain position boundaries on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (position) {
+        const x = Math.max(16, Math.min(position.x, window.innerWidth - 270 - 16));
+        const y = Math.max(16, Math.min(position.y, window.innerHeight - 68 - 16));
+        if (x !== position.x || y !== position.y) {
+          setPosition({ x, y });
+        }
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [position]);
+
+  // Mouse Drag Handlers
+  const handleMouseDown = (e) => {
+    // Prevent dragging if interactive children are clicked
+    if (
+      e.target.closest("button") || 
+      e.target.closest("input") || 
+      e.target.closest("a")
+    ) {
+      return;
+    }
+    e.preventDefault();
+    
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const initialX = position?.x || (window.innerWidth - 270 - 24);
+    const initialY = position?.y || (window.innerHeight - 68 - 24);
+
+    setIsDragging(true);
+    setHasMoved(false);
+
+    const handleMouseMove = (moveEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+      
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        setHasMoved(true);
+      }
+
+      const newX = Math.max(16, Math.min(initialX + deltaX, window.innerWidth - 270 - 16));
+      const newY = Math.max(16, Math.min(initialY + deltaY, window.innerHeight - 68 - 16));
+      
+      setPosition({ x: newX, y: newY });
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  // Touch Drag Handlers for Mobile Devices
+  const handleTouchStart = (e) => {
+    if (
+      e.target.closest("button") || 
+      e.target.closest("input") || 
+      e.target.closest("a")
+    ) {
+      return;
+    }
+    
+    const touch = e.touches[0];
+    const startX = touch.clientX;
+    const startY = touch.clientY;
+    const initialX = position?.x || (window.innerWidth - 270 - 24);
+    const initialY = position?.y || (window.innerHeight - 68 - 24);
+
+    setIsDragging(true);
+    setHasMoved(false);
+
+    const handleTouchMove = (moveEvent) => {
+      const touchMove = moveEvent.touches[0];
+      const deltaX = touchMove.clientX - startX;
+      const deltaY = touchMove.clientY - startY;
+      
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        setHasMoved(true);
+      }
+
+      const newX = Math.max(16, Math.min(initialX + deltaX, window.innerWidth - 270 - 16));
+      const newY = Math.max(16, Math.min(initialY + deltaY, window.innerHeight - 68 - 16));
+      
+      setPosition({ x: newX, y: newY });
+    };
+
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+
+    document.addEventListener("touchmove", handleTouchMove);
+    document.addEventListener("touchend", handleTouchEnd);
+  };
+
+  // Distinguish clicks from drags
+  const handleContainerClick = (e) => {
+    if (hasMoved) {
+      e.stopPropagation();
+      return;
+    }
+    navigate("/focus");
+  };
+
   // Hide if no session is active
   if (!isSessionActive) return null;
 
@@ -47,38 +191,51 @@ export const MinimizedFocusChip = () => {
 
   return (
     <div 
-      onClick={() => navigate("/focus")}
-      className="fixed z-[250] bg-slate-950/90 border border-slate-800 text-white px-3 py-2 shadow-2xl flex items-center justify-between gap-3 animate-in slide-in-from-bottom-5 duration-300 backdrop-blur-md hover:border-slate-700/80 transition-all cursor-pointer select-none
-        bottom-0 left-0 right-0 w-full rounded-none border-t border-b-0 border-l-0 border-r-0
-        md:bottom-6 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[250px] md:rounded-2xl md:border
-        lg:left-auto lg:right-6 lg:translate-x-0 lg:w-[270px]"
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      onClick={handleContainerClick}
+      className={`fixed z-[250] bg-bg-surface/90 border border-border text-text-primary px-3.5 py-2 shadow-2xl flex items-center justify-between gap-3 animate-in slide-in-from-bottom-5 duration-300 backdrop-blur-md hover:border-border-hover hover:shadow-theme-md select-none rounded-2xl w-[270px] transition-[border-color,box-shadow,background-color] ${
+        isDragging ? "cursor-grabbing" : "cursor-grab"
+      }`}
+      style={position ? {
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        bottom: "auto",
+        right: "auto",
+        transform: "none"
+      } : {
+        bottom: "24px",
+        right: "24px",
+        left: "auto",
+        top: "auto"
+      }}
     >
       {/* Time & Environment info */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-sm animate-pulse shrink-0">🎯</span>
         <div className="flex flex-col text-left min-w-0">
-          <span className="text-[8px] font-black uppercase tracking-widest text-[#10D28F] leading-none">Focus Session</span>
-          <span className="text-[11px] font-mono font-bold text-slate-350 mt-0.5 tabular-nums">{formattedTime}</span>
-          <span className="text-[8px] font-bold text-slate-500 truncate max-w-[90px] flex items-center gap-1 mt-0.5">
-            <Music className="w-2 h-2 text-slate-650 shrink-0" />
+          <span className="text-[8px] font-black uppercase tracking-widest text-primary leading-none">Focus Session</span>
+          <span className="text-[11px] font-mono font-bold text-text-primary mt-0.5 tabular-nums">{formattedTime}</span>
+          <span className="text-[8px] font-bold text-text-muted truncate max-w-[90px] flex items-center gap-1 mt-0.5">
+            <Music className="w-2 h-2 text-text-muted shrink-0" />
             <span>{soundName}</span>
           </span>
         </div>
       </div>
 
       {/* Action controls & Volume hover expansion bar */}
-      <div className="flex items-center gap-1.5 pl-1.5 border-l border-slate-900 shrink-0">
+      <div className="flex items-center gap-1.5 pl-1.5 border-l border-border shrink-0">
         {/* Compact Spotify hover volume slider */}
         {currentSoundId && (
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1 bg-slate-900/40 border border-slate-900 px-1.5 py-0.5 rounded-lg group/vol transition-all hover:bg-slate-900/80"
+            className="flex items-center gap-1 bg-bg-base/40 border border-border px-1.5 py-0.5 rounded-lg group/vol transition-all hover:bg-bg-base/80"
           >
             <button
               onClick={toggleMute}
-              className="text-slate-450 hover:text-white transition-colors"
+              className="text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
             >
-              {isMuted ? <VolumeX className="w-3 h-3 text-rose-500" /> : <Volume2 className="w-3 h-3" />}
+              {isMuted ? <VolumeX className="w-3 h-3 text-rose-500" /> : <Volume2 className="w-3 h-3 text-text-secondary" />}
             </button>
             <input
               type="range"
@@ -87,7 +244,7 @@ export const MinimizedFocusChip = () => {
               step="0.1"
               value={isMuted ? 0 : volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="w-0 group-hover/vol:w-10 transition-all duration-300 accent-[#10D28F] bg-slate-800 rounded-lg appearance-none cursor-pointer h-0.5 -translate-y-px outline-none"
+              className="w-0 group-hover/vol:w-10 transition-all duration-305 accent-primary bg-bg-base rounded-lg appearance-none cursor-pointer h-0.5 -translate-y-px outline-none"
               aria-label="Volume slider"
             />
           </div>
@@ -96,7 +253,7 @@ export const MinimizedFocusChip = () => {
         {isRunning ? (
           <button
             onClick={handlePause}
-            className="p-1 bg-slate-900/60 hover:bg-slate-850 text-slate-400 hover:text-white rounded-lg cursor-pointer transition-colors"
+            className="p-1 bg-bg-base/60 hover:bg-bg-surface-hover text-text-secondary hover:text-text-primary rounded-lg cursor-pointer transition-colors"
             title="Pause timer"
           >
             <Pause className="w-3 h-3 fill-current" />
@@ -104,7 +261,7 @@ export const MinimizedFocusChip = () => {
         ) : (
           <button
             onClick={handleResume}
-            className="p-1 bg-slate-900/60 hover:bg-slate-850 text-[#10D28F] hover:text-[#19E39C] rounded-lg cursor-pointer transition-colors"
+            className="p-1 bg-bg-base/60 hover:bg-bg-surface-hover text-primary hover:text-primary-hover rounded-lg cursor-pointer transition-colors"
             title="Resume timer"
           >
             <Play className="w-3 h-3 fill-current" />
@@ -113,7 +270,7 @@ export const MinimizedFocusChip = () => {
         
         <button
           onClick={handleCancel}
-          className="p-1 bg-rose-950/10 hover:bg-rose-950/20 text-rose-450 hover:text-rose-400 rounded-lg cursor-pointer transition-colors border border-rose-950/25"
+          className="p-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-lg cursor-pointer transition-colors border border-rose-500/20"
           title="Cancel timer"
         >
           <Square className="w-3 h-3 fill-current" />

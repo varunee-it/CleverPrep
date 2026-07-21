@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
 import Sidebar from "./Sidebar";
@@ -20,6 +20,24 @@ const AppLayout = ({ children }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // ==========================================
+  // Focus Workspace Global Theme Selector State
+  // ==========================================
+  const [globalTheme, setGlobalTheme] = useState(() => localStorage.getItem("cleverprep_global_theme") || "white");
+
+  useEffect(() => {
+    const handleThemeChange = () => {
+      setGlobalTheme(localStorage.getItem("cleverprep_global_theme") || "white");
+    };
+    window.addEventListener("cleverprep-global-theme-changed", handleThemeChange);
+    return () => window.removeEventListener("cleverprep-global-theme-changed", handleThemeChange);
+  }, []);
+
+  // Write theme dynamically to documentElement so all pages/elements inherit it
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", globalTheme);
+  }, [globalTheme]);
+
+  // ==========================================
   // Toggle Handlers
   // ==========================================
   const toggleMobileMenu = () => {
@@ -31,9 +49,7 @@ const AppLayout = ({ children }) => {
   };
 
   return (
-    <div className={`flex h-screen overflow-hidden font-display transition-colors duration-300 ${
-      isFocusPage ? "bg-[#090E18] text-white" : "bg-slate-50 text-slate-900"
-    }`}>
+    <div className="flex h-screen overflow-hidden font-display transition-colors duration-300 bg-bg-base text-text-primary">
       {/* Fixed Top Header */}
       <Header 
         toggleMobileMenu={toggleMobileMenu} 
@@ -42,7 +58,7 @@ const AppLayout = ({ children }) => {
       />
       
       {/* Main Content Area (Below Header) */}
-      <div className="flex flex-1 pt-14 overflow-hidden">
+      <div className="flex flex-1 pt-16 overflow-hidden">
         {/* Sidebar */}
         <Sidebar 
           isMobileMenuOpen={isMobileMenuOpen} 
@@ -51,9 +67,7 @@ const AppLayout = ({ children }) => {
         />
         
         {/* Page Content */}
-        <main className={`flex-1 overflow-x-hidden overflow-y-auto transition-colors duration-300 ${
-          isFocusPage ? "bg-[#090E18]" : "bg-[#F8FAFC]"
-        }`}>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto transition-colors duration-300 bg-bg-base">
           <div className={`${
             isFocusPage 
               ? "max-w-[1400px] w-full mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6"

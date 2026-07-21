@@ -24,6 +24,7 @@ const QuizResultPage = () => {
   const location = useLocation();
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
   const [showRetakeModal, setShowRetakeModal] = useState(false);
@@ -49,7 +50,8 @@ const QuizResultPage = () => {
         const data = await quizService.getQuizResults(quizId);
         setResults(data);
       } catch (error) {
-        toast.error('Failed to fetch quiz results.');
+        setError(error);
+        toast.error(error.message || 'Failed to fetch quiz results.');
         console.error(error);
       } finally {
         setLoading(false);
@@ -63,6 +65,46 @@ const QuizResultPage = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Spinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    let title = "Error";
+    let message = error.message || "An unexpected error occurred.";
+    
+    if (error.status === 400) {
+      title = "Quiz Incomplete";
+      message = "This quiz has not been completed yet. Please complete it first to view the results.";
+    } else if (error.status === 401) {
+      title = "Unauthorized";
+      message = "You must be logged in to view these results.";
+    } else if (error.status === 403) {
+      title = "Access Denied";
+      message = "You do not have permission to view these quiz results.";
+    } else if (error.status === 404) {
+      title = "Not Found";
+      message = "The requested quiz or results could not be found.";
+    } else if (error.status === 500) {
+      title = "Server Error";
+      message = "A server error occurred. Please try again later.";
+    }
+
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] px-4 font-display">
+        <div className="text-center max-w-md bg-white border border-slate-200/85 p-8 rounded-3xl shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto mb-4 text-rose-500 text-xl select-none">
+            ⚠️
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+          <p className="text-sm text-slate-500 mt-2 leading-relaxed font-medium">{message}</p>
+          <button
+            onClick={() => navigate('/documents')}
+            className="mt-6 px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+          >
+            Go to Documents
+          </button>
+        </div>
       </div>
     );
   }

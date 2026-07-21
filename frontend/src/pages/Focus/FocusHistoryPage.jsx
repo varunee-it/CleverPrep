@@ -135,7 +135,7 @@ export const FocusHistoryPage = () => {
     const days = [];
     // Blank padding cells
     for (let i = 0; i < firstDayIndex; i++) {
-      days.push(<div key={`empty-${i}`} className="h-20 bg-slate-950/20 border border-slate-900 rounded-lg opacity-25" />);
+      days.push(<div key={`empty-${i}`} className="h-22 bg-bg-base/30 border border-dashed border-border/40 rounded-xl opacity-30" />);
     }
 
     // Days in current month
@@ -144,32 +144,53 @@ export const FocusHistoryPage = () => {
       const daySessions = history.filter(item => item.date === dateStr);
       const isToday = new Date().toLocaleDateString("en-CA") === dateStr;
 
+      const maxVisible = 2;
+      const visibleSessions = daySessions.slice(0, maxVisible);
+      const hiddenCount = daySessions.length - maxVisible;
+
       days.push(
         <div 
           key={`day-${day}`} 
-          className={`h-20 p-2 border border-slate-900 rounded-xl flex flex-col justify-between bg-slate-900/10 hover:bg-slate-900/30 transition-all ${
-            isToday ? "border-emerald-500 bg-emerald-500/5 shadow-md shadow-emerald-500/2" : ""
+          className={`h-22 p-2 border rounded-xl flex flex-col justify-between transition-all duration-300 hover:bg-bg-surface/90 hover:shadow-theme-sm relative group ${
+            isToday 
+              ? "border-2 border-primary bg-primary/5 shadow-theme-sm" 
+              : "border-border/60 bg-bg-surface/40"
           }`}
         >
-          <span className={`text-[10px] font-black ${isToday ? "text-[#10D28F]" : "text-slate-500"}`}>{day}</span>
-          <div className="flex flex-col gap-0.5 overflow-hidden">
-            {daySessions.map((session, idx) => (
+          <span className={`text-[10px] font-black leading-none ${isToday ? "text-primary" : "text-text-muted"}`}>{day}</span>
+          <div className="flex flex-col gap-1 overflow-hidden mt-1">
+            {visibleSessions.map((session, idx) => {
+              const isCompleted = session.completionStatus === "Completed";
+              return (
+                <div 
+                  key={session.id || idx}
+                  onClick={() => {
+                    setSearchQuery(session.goal);
+                    setViewMode("list");
+                  }}
+                  className={`text-[8px] truncate px-1.5 py-0.5 rounded font-bold cursor-pointer transition-all ${
+                    isCompleted 
+                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                      : "bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-455"
+                  }`}
+                  title={`${session.startTime} - ${session.goal}`}
+                >
+                  {session.goal}
+                </div>
+              );
+            })}
+            {hiddenCount > 0 && (
               <div 
-                key={session.id || idx}
                 onClick={() => {
-                  setSearchQuery(session.goal);
+                  const dayDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+                  setSearchQuery(dayDate);
                   setViewMode("list");
                 }}
-                className={`text-[8px] truncate px-1 py-0.5 rounded font-bold cursor-pointer transition-all ${
-                  session.completionStatus === "Completed" 
-                    ? "bg-emerald-950/60 border border-emerald-900/60 text-[#10D28F]" 
-                    : "bg-rose-950/60 border border-rose-900/60 text-rose-450"
-                }`}
-                title={`${session.startTime} - ${session.goal}`}
+                className="text-[7.5px] font-black text-primary text-center py-0.5 cursor-pointer hover:underline uppercase tracking-wider"
               >
-                {session.goal}
+                +{hiddenCount} more
               </div>
-            ))}
+            )}
           </div>
         </div>
       );
@@ -178,27 +199,27 @@ export const FocusHistoryPage = () => {
     return (
       <div className="space-y-4 animate-in fade-in duration-300 text-left">
         {/* Calendar Nav header */}
-        <div className="flex items-center justify-between bg-slate-900/40 border border-slate-900 rounded-2xl px-4 py-2">
+        <div className="flex items-center justify-between bg-bg-surface/60 border border-border rounded-2xl px-4 py-2">
           <button 
             onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
-            className="text-xs font-black text-slate-400 hover:text-white cursor-pointer"
+            className="text-xs font-black text-text-secondary hover:text-text-primary cursor-pointer select-none"
           >
             ← Previous
           </button>
-          <h4 className="text-xs font-extrabold text-white">
+          <h4 className="text-xs font-extrabold text-text-primary select-none">
             {currentDate.toLocaleString("default", { month: "long", year: "numeric" })}
           </h4>
           <button 
             onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
-            className="text-xs font-black text-slate-400 hover:text-white cursor-pointer"
+            className="text-xs font-black text-text-secondary hover:text-text-primary cursor-pointer select-none"
           >
             Next →
           </button>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-center">
+        <div className="grid grid-cols-7 gap-1.5 text-center">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
-            <div key={d} className="text-[9px] font-black uppercase tracking-wider text-slate-500 py-1">{d}</div>
+            <div key={d} className="text-[9px] font-black uppercase tracking-wider text-text-muted py-1">{d}</div>
           ))}
           {days}
         </div>
@@ -206,18 +227,17 @@ export const FocusHistoryPage = () => {
     );
   };
 
-  // Timeline render implementation
   const renderTimeline = () => {
     if (filteredHistory.length === 0) {
       return (
-        <div className="text-center py-20 text-slate-500 text-xs font-semibold">
+        <div className="text-center py-20 text-text-muted text-xs font-semibold">
           No study sessions matched your filter criteria.
         </div>
       );
     }
 
     return (
-      <div className="relative border-l border-slate-900 ml-4 md:ml-12 pl-6 space-y-6 pb-12 text-left animate-in fade-in duration-300">
+      <div className="relative border-l border-border ml-4 md:ml-12 pl-6 space-y-6 pb-12 text-left animate-in fade-in duration-300">
         {filteredHistory.map((item, idx) => {
           const isCompleted = item.completionStatus === "Completed";
           const rate = Math.round((item.completedDuration / item.totalDuration) * 100);
@@ -229,47 +249,47 @@ export const FocusHistoryPage = () => {
 
           return (
             <div key={item.id || idx} className="relative group">
-              <div className={`absolute -left-[35px] top-1.5 w-6 h-6 rounded-full border border-slate-800 bg-slate-950 flex items-center justify-center text-xs shadow-md ${
-                isCompleted ? "border-emerald-500 text-[#10D28F]" : "border-rose-900 text-rose-455"
+              <div className={`absolute -left-[35px] top-1.5 w-6 h-6 rounded-full border bg-bg-surface flex items-center justify-center text-xs shadow-theme-sm ${
+                isCompleted ? "border-primary text-primary" : "border-rose-500/40 text-rose-500"
               }`}>
                 {envIcon}
               </div>
 
-              <div className="bg-[#111827]/40 border border-slate-900 hover:border-slate-800 p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 hover:scale-[1.005]">
+              <div className="bg-bg-surface/50 border border-border hover:border-border-hover p-4 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-300 hover:scale-[1.005]">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] font-black text-slate-500 font-mono uppercase tracking-wider">{item.date} • {item.startTime}</span>
+                    <span className="text-[9px] font-black text-text-muted font-mono uppercase tracking-wider">{item.date} • {item.startTime}</span>
                     <span className={`px-1.5 py-0.5 rounded-full text-[7px] font-black uppercase tracking-wider border ${
                       isCompleted 
-                        ? "bg-emerald-950/60 border-emerald-900/60 text-[#10D28F]" 
-                        : "bg-rose-950/60 border-rose-900/60 text-rose-455"
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400" 
+                        : "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-455"
                     }`}>
                       {item.completionStatus}
                     </span>
                   </div>
-                  <h4 className="text-xs font-extrabold text-white truncate">🎯 {item.goal}</h4>
-                  <p className="text-[9px] font-bold text-slate-500 mt-1">
-                    Activity: <span className="text-slate-350">{item.activity}</span> • Atmosphere: <span className="text-slate-355">{item.environment}</span>
+                  <h4 className="text-xs font-extrabold text-text-primary truncate">🎯 {item.goal}</h4>
+                  <p className="text-[9px] font-bold text-text-muted mt-1">
+                    Activity: <span className="text-text-secondary">{item.activity}</span> • Atmosphere: <span className="text-text-secondary">{item.environment}</span>
                   </p>
                 </div>
 
-                <div className="flex items-center gap-6 shrink-0 justify-between md:justify-end border-t md:border-t-0 border-slate-900 pt-3 md:pt-0">
+                <div className="flex items-center gap-6 shrink-0 justify-between md:justify-end border-t md:border-t-0 border-border pt-3 md:pt-0">
                   <div className="text-right">
-                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block leading-none">Productivity</span>
-                    <span className="text-sm font-mono font-bold text-white mt-1 block leading-none">{rate}% Score</span>
+                    <span className="text-[9px] font-black text-text-muted uppercase tracking-widest block leading-none">Productivity</span>
+                    <span className="text-sm font-mono font-bold text-text-primary mt-1 block leading-none">{rate}% Score</span>
                   </div>
 
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleDuplicate(item)}
-                      className="p-1.5 bg-slate-900/60 hover:bg-slate-850 border border-slate-850 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 bg-bg-surface border border-border text-text-secondary hover:text-text-primary hover:bg-bg-surface-hover rounded-lg transition-colors cursor-pointer"
                       title="Quick Resume"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="p-1.5 bg-rose-950/10 hover:bg-rose-950/20 border border-rose-955 text-rose-455 hover:text-rose-400 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-500 hover:text-rose-600 rounded-lg transition-colors cursor-pointer"
                       title="Delete log"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -285,44 +305,49 @@ export const FocusHistoryPage = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-[150] bg-[#090E18] overflow-y-auto flex flex-col p-4 sm:p-8 font-display select-none">
+    <div 
+      className="fixed inset-0 z-[150] overflow-y-auto flex flex-col p-4 sm:p-8 font-display select-none"
+      style={{
+        background: `linear-gradient(135deg, var(--color-bg-base) 0%, var(--color-bg-surface) 100%)`
+      }}
+    >
       
       {/* 1. Header Toolbar */}
-      <div className="flex items-center justify-between border-b border-slate-900 pb-4 mb-6 shrink-0 print:hidden">
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-border pb-4 mb-6 shrink-0 gap-4 print:hidden">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/dashboard")}
-            className="p-1.5 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#10D28F]"
+            onClick={() => navigate("/focus")}
+            className="p-1.5 bg-bg-surface border border-border hover:border-border-hover text-text-secondary hover:text-text-primary rounded-xl transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
             aria-label="Back"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h2 className="text-base font-extrabold text-white leading-tight">Focus Journal</h2>
-            <p className="text-[10px] font-bold text-slate-500 tracking-wider uppercase mt-0.5">Session Logs History</p>
+            <h2 className="text-base font-extrabold text-text-primary leading-tight">Focus Journal</h2>
+            <p className="text-[10px] font-bold text-text-muted tracking-wider uppercase mt-0.5">Session Logs History</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => navigate("/focus")}
-            className="px-3 py-1.5 bg-slate-900/60 hover:bg-slate-850 border border-slate-800 text-slate-450 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#10D28F]"
+            className="px-3 py-1.5 bg-bg-surface border border-border text-text-secondary hover:text-text-primary rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           >
             Workspace
           </button>
           <button
             onClick={() => navigate("/focus/analytics")}
-            className="px-3 py-1.5 bg-slate-900/60 hover:bg-slate-850 border border-slate-800 text-slate-450 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#10D28F]"
+            className="px-3 py-1.5 bg-bg-surface border border-border text-text-secondary hover:text-text-primary rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
           >
             Analytics
           </button>
 
           {/* List vs Timeline vs Calendar views */}
-          <div className="flex items-center bg-slate-900/40 border border-slate-800 rounded-xl p-0.5">
+          <div className="flex items-center bg-bg-surface/50 border border-border rounded-xl p-0.5">
             <button
               onClick={() => setViewMode("list")}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === "list" ? "bg-slate-800 text-[#10D28F]" : "text-slate-500 hover:text-white"
+                viewMode === "list" ? "bg-primary text-primary-text" : "text-text-secondary hover:text-text-primary"
               }`}
               title="List layout"
             >
@@ -331,7 +356,7 @@ export const FocusHistoryPage = () => {
             <button
               onClick={() => setViewMode("timeline")}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === "timeline" ? "bg-slate-800 text-[#10D28F]" : "text-slate-500 hover:text-white"
+                viewMode === "timeline" ? "bg-primary text-primary-text" : "text-text-secondary hover:text-text-primary"
               }`}
               title="Timeline flow"
             >
@@ -340,7 +365,7 @@ export const FocusHistoryPage = () => {
             <button
               onClick={() => setViewMode("calendar")}
               className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === "calendar" ? "bg-slate-800 text-[#10D28F]" : "text-slate-500 hover:text-white"
+                viewMode === "calendar" ? "bg-primary text-primary-text" : "text-text-secondary hover:text-text-primary"
               }`}
               title="Calendar grid"
             >
@@ -352,17 +377,17 @@ export const FocusHistoryPage = () => {
           <button
             onClick={handleExportCSV}
             disabled={history.length === 0}
-            className="px-3 py-1.5 bg-slate-900/60 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-20 cursor-pointer"
+            className="px-3 py-1.5 bg-bg-surface border border-border text-text-secondary hover:text-text-primary rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-20 cursor-pointer"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-500" />
             <span>CSV</span>
           </button>
           <button
             onClick={handleExportPDF}
             disabled={history.length === 0}
-            className="px-3 py-1.5 bg-slate-900/60 hover:bg-slate-850 border border-slate-800 text-slate-300 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-20 cursor-pointer"
+            className="px-3 py-1.5 bg-bg-surface border border-border text-text-secondary hover:text-text-primary rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-20 cursor-pointer"
           >
-            <FileText className="w-3.5 h-3.5 text-teal-400" />
+            <FileText className="w-3.5 h-3.5 text-teal-500" />
             <span>PDF</span>
           </button>
         </div>
@@ -376,24 +401,24 @@ export const FocusHistoryPage = () => {
 
       {/* 2. Filters & Searches */}
       {viewMode === "list" && history.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-slate-900/10 border border-slate-900 p-3 rounded-2xl mb-6 print:hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-bg-surface/50 border border-border p-3 rounded-2xl mb-6 print:hidden">
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
+            <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-text-muted" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search goals, notes..."
-              className="w-full pl-9 pr-4 py-1.5 bg-slate-950/40 border border-slate-850 rounded-xl text-xs placeholder-slate-650 text-white focus:outline-none focus:border-emerald-500/40 transition-all font-semibold"
+              className="w-full pl-9 pr-4 py-1.5 bg-bg-surface border border-border rounded-xl text-xs placeholder-text-muted text-text-primary focus:outline-none focus:border-primary/50 transition-all font-semibold"
             />
           </div>
 
           <div className="relative">
-            <Filter className="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-500" />
+            <Filter className="absolute left-3 top-2.5 w-3.5 h-3.5 text-text-muted" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-slate-950/40 border border-slate-850 rounded-xl text-xs text-slate-300 focus:outline-none focus:border-emerald-500/40 transition-all cursor-pointer font-bold"
+              className="w-full pl-9 pr-4 py-1.5 bg-bg-surface border border-border rounded-xl text-xs text-text-secondary focus:outline-none focus:border-primary/50 transition-all cursor-pointer font-bold"
             >
               <option value="all">All Statuses</option>
               <option value="completed">Completed</option>

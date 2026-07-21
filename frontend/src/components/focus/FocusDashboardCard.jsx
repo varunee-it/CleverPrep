@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useStudySession from "../../hooks/useStudySession";
 import focusStorage from "../../services/FocusStorage";
-import { Play, Sparkles, Clock, Target, ArrowRight, Zap } from "lucide-react";
+import { Play, Sparkles, Clock, Target, ArrowRight, Zap, Trophy } from "lucide-react";
 
 export const FocusDashboardCard = () => {
   const navigate = useNavigate();
-  const { session, createSession, startSession, setIsOverlayOpen } = useStudySession();
+  const { session, createSession, startSession } = useStudySession();
 
   const [stats, setStats] = useState({});
   const [history, setHistory] = useState([]);
@@ -34,7 +34,6 @@ export const FocusDashboardCard = () => {
       navigate("/focus");
       return;
     }
-    // Create quick session defaults
     createSession({
       mode: "quick",
       duration: 25 * 60,
@@ -46,57 +45,94 @@ export const FocusDashboardCard = () => {
     navigate("/focus");
   };
 
+  const estCompletionTime = () => {
+    const remaining = Math.max(0, goalMinutes - todayMins);
+    if (remaining === 0) return "Goal achieved!";
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + remaining);
+    return `Est. goal completion: ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  };
+
+  const [globalTheme, setGlobalTheme] = useState(() => localStorage.getItem("cleverprep_global_theme") || "white");
+
+  useEffect(() => {
+    const handleThemeChange = () => {
+      setGlobalTheme(localStorage.getItem("cleverprep_global_theme") || "white");
+    };
+    window.addEventListener("cleverprep-global-theme-changed", handleThemeChange);
+    return () => window.removeEventListener("cleverprep-global-theme-changed", handleThemeChange);
+  }, []);
+
+  const cardWrapperClass = "bg-bg-surface border border-border text-text-primary shadow-theme-sm";
+  const clockBadgeClass = "bg-primary/10 text-primary border border-primary/20";
+  const streakTextClass = "text-primary";
+  const titleTextClass = "text-text-primary";
+  const descTextClass = "text-text-secondary";
+  const metaTextClass = "text-text-secondary";
+  const boldValClass = "text-text-primary";
+  const estCompletionClass = "text-primary";
+  const ringBgTrack = "var(--color-border)";
+  const pctTextClass = "text-text-primary";
+  const actionBtnClass = "bg-primary hover:bg-primary-hover text-primary-text shadow-theme-md";
+
   return (
-    <div className="bg-white border border-slate-200/85 rounded-xl p-4 shadow-xs hover:shadow-md transition-all duration-300 relative overflow-hidden select-none text-left flex flex-col justify-between min-h-[160px]">
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-[#10D28F]" />
-            <span>Smart Focus</span>
+    <div className={`rounded-xl p-6 shadow-xs relative overflow-hidden select-none text-left flex flex-col md:flex-row items-center justify-between gap-6 min-h-[185px] group ${cardWrapperClass}`}>
+      {/* Decorative clean radial background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-emerald-500/5 via-teal-500/2 to-transparent pointer-events-none" />
+      
+      <div className="space-y-3 flex-1">
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${clockBadgeClass}`}>
+            <Clock className="w-3.5 h-3.5" />
+            <span>Smart Focus Workspace</span>
           </span>
-          <span className="text-[10px] font-bold text-amber-500 flex items-center gap-0.5">
-            <Zap className="w-3.5 h-3.5 text-amber-400 fill-current animate-pulse" />
+          <span className={`text-[10px] font-bold flex items-center gap-0.5 ${streakTextClass}`}>
+            <Zap className="w-3.5 h-3.5 fill-current animate-pulse" />
             <span>{stats.currentStreak || 0}d Streak</span>
           </span>
         </div>
 
-        <h4 className="text-xs font-bold text-slate-900 leading-tight">
-          {isSessionActive 
-            ? `Active: ${session.goal || "Deep study block"}` 
-            : "Distraction-Free Study Window"}
-        </h4>
-        <p className="text-[10px] text-slate-500 mt-1 leading-relaxed max-w-[190px]">
-          {isSessionActive
-            ? "Your study session is currently running. Continue to log duration."
-            : "Commit to focused blocks to generate diagnostics metrics."}
-        </p>
+        <div>
+          <h3 className={`text-base sm:text-lg font-extrabold leading-snug tracking-tight ${titleTextClass}`}>
+            {isSessionActive 
+              ? `Active: ${session.goal || "Deep study block"}` 
+              : "Commit to focused blocks. quiet the mind, sharpen the focus."}
+          </h3>
+          <p className={`text-xs mt-1.5 leading-relaxed max-w-md ${descTextClass}`}>
+            {isSessionActive
+              ? "Your study session is active. Re-enter the focus cockpit to view ambient soundscapes and log minutes."
+              : "Dedicate structured windows to PDF materials summaries. Generates active recall flashcards decks and mock assessments automatically."}
+          </p>
+        </div>
+
+        <div className={`flex items-center gap-4 text-[10px] pt-1 font-semibold flex-wrap ${metaTextClass}`}>
+          <span className="flex items-center gap-1">🎯 Today's Goal: <b className={boldValClass}>{goalMinutes} mins</b></span>
+          <span className="flex items-center gap-1">⏱️ Remaining: <b className={boldValClass}>{Math.max(0, goalMinutes - todayMins)} mins</b></span>
+          <span className={`font-bold ${estCompletionClass}`}>{estCompletionTime()}</span>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-3 mt-3">
-        <div className="flex items-center gap-3">
-          {/* Progress Ring */}
-          <div className="relative shrink-0 flex items-center justify-center">
-            <svg className="w-9 h-9 transform -rotate-90" viewBox="0 0 32 32">
-              <circle cx="16" cy="16" r="13" fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
-              <circle cx="16" cy="16" r="13" fill="none" stroke="#10D28F" strokeWidth="2.5" 
-                strokeDasharray={81.6} strokeDashoffset={81.6 - (81.6 * pct) / 100}
-                strokeLinecap="round" className="transition-all duration-500" />
-            </svg>
-            <span className="absolute text-[8px] font-mono font-black text-slate-650">{pct}%</span>
-          </div>
-
-          <div>
-            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block leading-none">Today's Focus</span>
-            <span className="text-xs font-mono font-bold text-slate-800 mt-1 block leading-none">{todayMins}m / {goalMinutes}m</span>
+      <div className="flex flex-col items-center gap-3 shrink-0">
+        {/* Progress Ring */}
+        <div className="relative flex items-center justify-center">
+          <svg className="w-20 h-20 transform -rotate-90 filter drop-shadow-sm" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="15" fill="none" stroke={ringBgTrack} strokeWidth="2.5" />
+            <circle cx="18" cy="18" r="15" fill="none" stroke="#10D28F" strokeWidth="2.5" 
+              strokeDasharray={94.2} strokeDashoffset={94.2 - (94.2 * pct) / 100}
+              strokeLinecap="round" className="transition-all duration-500" />
+          </svg>
+          <div className="absolute flex flex-col items-center justify-center text-center">
+            <span className={`text-sm font-mono font-black leading-none ${pctTextClass}`}>{pct}%</span>
+            <span className="text-[7px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">done</span>
           </div>
         </div>
 
         <button
           onClick={handleStartFocus}
-          className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-all cursor-pointer shadow-xs shrink-0"
+          className={`w-full px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm hover:-translate-y-0.5 ${actionBtnClass}`}
         >
-          <span>{isSessionActive ? "Continue" : "Start Focus"}</span>
-          <ArrowRight className="w-3 h-3 text-[#10D28F]" />
+          <span>{isSessionActive ? "Continue Session" : "Start Focus Block"}</span>
+          <ArrowRight className="w-4 h-4" />
         </button>
       </div>
     </div>

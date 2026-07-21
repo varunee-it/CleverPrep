@@ -189,14 +189,21 @@ const Flashcard = React.memo(({ flashcard, onToggleStar, isFlipped, onFlip }) =>
                     {/* Scrollable Answer / Explanations / Memory Tips */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar my-4 pr-1">
                         <div 
-                            className={`transition-all duration-500 ease-out transform flex flex-col items-center justify-center min-h-full
+                            className={`transition-all duration-500 ease-out transform flex flex-col items-center justify-center min-h-full w-full
                                 ${isFlipped ? 'opacity-100 translate-y-0 scale-100 delay-150' : 'opacity-0 translate-y-4 scale-95'}`}
                         >
-                            <span className="text-xs font-bold tracking-widest text-emerald-600 uppercase mb-2">
+                            <span className="text-xs font-bold tracking-widest text-emerald-600 uppercase mb-2 select-none">
                                 ✅ Correct Answer
                             </span>
 
-                            <p className="text-3xl sm:text-4xl font-bold text-center text-slate-900 leading-tight mb-6 px-2 font-display">
+                            <p 
+                                className={`font-bold text-slate-900 leading-[1.5] mb-6 px-4 font-display w-full max-w-md mx-auto ${
+                                    (flashcard.answer.length > 45 || flashcard.answer.includes("\n")) 
+                                        ? 'text-left' 
+                                        : 'text-center'
+                                }`}
+                                style={{ fontSize: 'clamp(20px, 3.2vw, 28px)' }}
+                            >
                                 {flashcard.answer}
                             </p>
 
