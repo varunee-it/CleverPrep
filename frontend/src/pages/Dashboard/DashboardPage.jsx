@@ -28,6 +28,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTour } from "../../context/TourContext";
 import FocusDashboardCard from "../../components/focus/FocusDashboardCard";
 import moment from "moment";
+import { getUserDisplayName } from "../../utils/userUtils";
 
 const DashboardPage = () => {
   const { user } = useAuth();
@@ -70,11 +71,7 @@ const DashboardPage = () => {
 
   if (loading) return <Spinner />;
 
-  const displayName = 
-    user?.username || 
-    user?.firstName || 
-    (user?.name && typeof user.name === 'string' ? user.name.split(' ')[0] : "") || 
-    "Learner";
+  const displayName = getUserDisplayName(user);
 
   const totalDocsCount = dashboardData?.overview?.totalDocuments || 0;
   if (!dashboardData || !dashboardData.overview || totalDocsCount === 0) {

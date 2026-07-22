@@ -118,20 +118,8 @@ const Sidebar = ({
               className={({ isActive }) =>
                 `group flex items-center ${isSidebarCollapsed ? 'justify-center md:px-0' : 'px-4.5'} py-3.5 text-sm font-medium rounded-xl transition-all duration-200 relative ${
                   isActive
-                    ? globalTheme === "black"
-                      ? "bg-slate-900/60 text-[#10D28F] border border-slate-850/60"
-                      : globalTheme === "beige"
-                        ? "bg-[#FAF0D9] text-[#8C6D34] border border-[#B89D6C]/50"
-                        : globalTheme === "lavender"
-                          ? "bg-[#F5F3FF] text-[#7C3AED] border border-[#C7D2FE]/50"
-                          : "bg-emerald-50 text-emerald-600 shadow-sm border border-emerald-100/50"
-                    : globalTheme === "black"
-                      ? "text-slate-400 hover:bg-slate-900/40 hover:text-white border border-transparent"
-                      : globalTheme === "beige"
-                        ? "text-[#7A6C58] hover:bg-[#FAF6EE] hover:text-[#433422] border border-transparent hover:translate-x-0.5"
-                        : globalTheme === "lavender"
-                          ? "text-[#6A5A8C] hover:bg-[#FAF9FF] hover:text-[#2E1F47] border border-transparent hover:translate-x-0.5"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-905 border border-transparent hover:translate-x-0.5"
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-text-muted hover:bg-bg-surface-hover hover:text-text-primary border border-transparent hover:translate-x-0.5"
                 } ${
                   link.to === "/documents" ? "tour-sidebar-library" : link.to === "/profile" ? "tour-sidebar-profile" : ""
                 }`
@@ -145,20 +133,8 @@ const Sidebar = ({
                     strokeWidth={isActive ? 2.25 : 1.75}
                     className={`shrink-0 transition-transform duration-200 ${
                       isActive 
-                        ? globalTheme === "black"
-                          ? "text-[#10D28F] scale-105"
-                          : globalTheme === "beige"
-                            ? "text-[#8C6D34] scale-105"
-                            : globalTheme === "lavender"
-                              ? "text-[#7C3AED] scale-105"
-                              : "text-emerald-600 scale-105"
-                        : globalTheme === "black"
-                          ? "text-slate-500 group-hover:text-slate-300 group-hover:scale-105"
-                          : globalTheme === "beige"
-                            ? "text-[#9B8C77] group-hover:text-[#433422] group-hover:scale-105"
-                            : globalTheme === "lavender"
-                              ? "text-[#9585BA] group-hover:text-[#2E1F47] group-hover:scale-105"
-                              : "text-slate-400 group-hover:text-slate-655 group-hover:scale-105"
+                        ? "text-primary scale-105"
+                        : "text-text-muted group-hover:text-text-primary group-hover:scale-105"
                     }`}
                   />
                   <span
@@ -169,12 +145,7 @@ const Sidebar = ({
                     {link.text}
                   </span>
                   {isActive && !isSidebarCollapsed && (
-                    <span className={`absolute right-3 w-1.5 h-1.5 rounded-full animate-pulse ${
-                      globalTheme === "black" ? "bg-[#10D28F]" :
-                      globalTheme === "beige" ? "bg-[#8C6D34]" :
-                      globalTheme === "lavender" ? "bg-[#7C3AED]" :
-                      "bg-emerald-550"
-                    }`} />
+                    <span className="absolute right-3 w-1.5 h-1.5 rounded-full animate-pulse bg-primary" />
                   )}
                 </>
               )}

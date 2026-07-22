@@ -232,6 +232,51 @@ const FlashcardManager = ({ documentId, onTabChange }) => {
         }
     }, [currentCardIndex, filteredDeck]);
 
+    // Calculate metrics and save analytics to server
+    const handleCompleteSession = async () => {
+        setSessionFinished(true);
+        const duration = Math.round((Date.now() - startTime) / 1000);
+        const bookmarked = filteredDeck.filter(c => c.isStarred).length;
+        const avgTime = responseTimes.length > 0 
+            ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length) 
+            : 0;
+
+        try {
+            await flashcardService.saveSessionAnalytics(selectedSet._id, {
+                studyDuration: duration,
+                cardsReviewed: viewedCardIds.size,
+                cardsBookmarked: bookmarked,
+                againCount: 0,
+                goodCount: viewedCardIds.size,
+                easyCount: 0,
+                avgResponseTime: avgTime
+            });
+            console.log("Session analytics saved successfully.");
+        } catch (error) {
+            console.error("Failed to save session analytics", error);
+        }
+    };
+
+    const handleNextCard = () => {
+        // Record elapsed response time
+        if (cardStartTime) {
+            const elapsed = Date.now() - cardStartTime;
+            setResponseTimes(prev => [...prev, elapsed]);
+        }
+
+        if (currentCardIndex < filteredDeck.length - 1) {
+            setCurrentCardIndex(prev => prev + 1);
+        } else {
+            handleCompleteSession();
+        }
+    };
+
+    const handlePrevCard = () => {
+        if (currentCardIndex > 0) {
+            setCurrentCardIndex(prev => prev - 1);
+        }
+    };
+
     // Keyboard Shortcuts effect
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -269,51 +314,6 @@ const FlashcardManager = ({ documentId, onTabChange }) => {
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [selectedSet, isFlipped, currentCardIndex, filteredDeck, sessionFinished]);
-
-    const handleNextCard = () => {
-        // Record elapsed response time
-        if (cardStartTime) {
-            const elapsed = Date.now() - cardStartTime;
-            setResponseTimes(prev => [...prev, elapsed]);
-        }
-
-        if (currentCardIndex < filteredDeck.length - 1) {
-            setCurrentCardIndex(prev => prev + 1);
-        } else {
-            handleCompleteSession();
-        }
-    };
-
-    const handlePrevCard = () => {
-        if (currentCardIndex > 0) {
-            setCurrentCardIndex(prev => prev - 1);
-        }
-    };
-
-    // Calculate metrics and save analytics to server
-    const handleCompleteSession = async () => {
-        setSessionFinished(true);
-        const duration = Math.round((Date.now() - startTime) / 1000);
-        const bookmarked = filteredDeck.filter(c => c.isStarred).length;
-        const avgTime = responseTimes.length > 0 
-            ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length) 
-            : 0;
-
-        try {
-            await flashcardService.saveSessionAnalytics(selectedSet._id, {
-                studyDuration: duration,
-                cardsReviewed: viewedCardIds.size,
-                cardsBookmarked: bookmarked,
-                againCount: 0,
-                goodCount: viewedCardIds.size,
-                easyCount: 0,
-                avgResponseTime: avgTime
-            });
-            console.log("Session analytics saved successfully.");
-        } catch (error) {
-            console.error("Failed to save session analytics", error);
-        }
-    };
 
     const handleToggleStar = async (cardId) => {
         try {

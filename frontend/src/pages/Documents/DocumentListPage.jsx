@@ -202,13 +202,13 @@ const DocumentListPage = () => {
     <div className="max-w-7xl mx-auto space-y-8 pb-12 relative z-10 animate-in fade-in duration-300">
       
       {/* Hero Header */}
-      <div className="relative bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+      <div className="relative bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-3xl p-5 sm:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-teal-500/5 blur-3xl pointer-events-none" />
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-5 relative z-10">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-emerald-50 to-emerald-100/50 border border-emerald-100/50 flex items-center justify-center shrink-0 shadow-sm">
-            <FolderOpen className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600" strokeWidth={1.5} />
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-emerald-50 to-emerald-100/50 border border-emerald-100/50 flex items-center justify-center shrink-0 shadow-sm">
+            <FolderOpen className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-600" strokeWidth={1.5} />
           </div>
           <div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight font-display">
@@ -234,9 +234,9 @@ const DocumentListPage = () => {
       {/* Dashboard Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Total Documents */}
-        <div className="bg-white/60 backdrop-blur-xl border border-slate-100 rounded-[20px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-            <FileText className="w-6 h-6" strokeWidth={1.5} />
+        <div className="bg-white/60 backdrop-blur-xl border border-slate-100 rounded-[20px] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
+            <FileText className="w-5 h-5" strokeWidth={1.5} />
           </div>
           <div>
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Documents</span>
@@ -246,9 +246,9 @@ const DocumentListPage = () => {
         </div>
 
         {/* Total Flashcards */}
-        <div className="bg-white/60 backdrop-blur-xl border border-slate-100 rounded-[20px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shrink-0">
-            <BookOpen className="w-6 h-6" strokeWidth={1.5} />
+        <div className="bg-white/60 backdrop-blur-xl border border-slate-100 rounded-[20px] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shrink-0">
+            <BookOpen className="w-5 h-5" strokeWidth={1.5} />
           </div>
           <div>
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Flashcards</span>
@@ -258,9 +258,9 @@ const DocumentListPage = () => {
         </div>
 
         {/* Total Quizzes */}
-        <div className="bg-white/60 backdrop-blur-xl border border-slate-100 rounded-[20px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-            <BrainCircuit className="w-6 h-6" strokeWidth={1.5} />
+        <div className="bg-white/60 backdrop-blur-xl border border-slate-100 rounded-[20px] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
+            <BrainCircuit className="w-5 h-5" strokeWidth={1.5} />
           </div>
           <div>
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Quizzes</span>
@@ -270,9 +270,9 @@ const DocumentListPage = () => {
         </div>
 
         {/* Total Notes */}
-        <div className="bg-white/60 backdrop-blur-xl border border-slate-100 rounded-[20px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
-            <Sparkles className="w-6 h-6" strokeWidth={1.5} />
+        <div className="bg-white/60 backdrop-blur-xl border border-slate-100 rounded-[20px] p-4 shadow-[0_8px_30px_rgba(0,0,0,0.015)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.03)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5" strokeWidth={1.5} />
           </div>
           <div>
             <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Notes</span>

@@ -8,6 +8,7 @@ import {
   Mail,
   Lock,
   ArrowRight,
+  AlertCircle,
 } from "lucide-react";
 
 import toast from "react-hot-toast";

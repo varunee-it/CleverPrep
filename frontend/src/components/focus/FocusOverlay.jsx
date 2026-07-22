@@ -256,10 +256,10 @@ export const FocusOverlay = () => {
   const quoteTextClass = "text-text-muted";
 
   return (
-    <div className={`flex flex-col justify-between w-full h-full min-h-[calc(100vh-80px)] select-none transition-all duration-300 font-display ${bgClass}`}>
+    <div className={`flex flex-col justify-between w-full min-h-[calc(100vh-130px)] lg:min-h-0 lg:h-full overflow-hidden select-none transition-all duration-300 font-display ${bgClass}`}>
       
       {/* 1. Subheader Toolbar - Compact & Symmetrical */}
-      <div className={`relative z-10 flex items-center justify-between gap-4 w-full shrink-0 pb-1.5 select-none mb-3 border-b ${subheaderBorderClass}`}>
+      <div className={`relative z-10 flex items-center justify-between gap-4 w-full shrink-0 pb-1 select-none mb-1.5 border-b ${subheaderBorderClass}`}>
         <div className="flex items-center gap-2">
           <button
             onClick={handleBackClick}
@@ -296,7 +296,7 @@ export const FocusOverlay = () => {
       </div>
 
       {/* 2. Symmetrical Main Columns Grid (Compact & Visual Spacings) */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full py-2 overflow-hidden relative">
+      <div className="flex-1 flex flex-col items-center justify-center w-full py-1 overflow-hidden relative">
         {!isSessionActive && (
           <div className="absolute inset-0 bg-primary/[0.025] pointer-events-none [mask-image:radial-gradient(circle_at_center,black_30%,transparent_70%)]" />
         )}
@@ -420,14 +420,14 @@ export const FocusOverlay = () => {
           </div>
         ) : (
           /* Active Study Session Layout - Three-column balanced grid centered with premium max-width */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[280px_1fr_280px] gap-6 w-full max-w-[1100px] mx-auto items-center py-2 animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[260px_1fr_260px] gap-4.5 w-full max-w-[1050px] mx-auto items-center py-0.5 animate-in fade-in duration-300">
             
             {/* Column 1: Info Cards (Goal & Activity) - Compact and dense */}
-            <div className="flex flex-col gap-3 w-full max-w-sm mx-auto order-2 lg:order-1">
+            <div className="flex flex-col gap-2.5 w-full max-w-sm mx-auto order-2 lg:order-1">
               
               {/* Study Info Card */}
-              <div className={`p-4 rounded-xl border border-l-4 border-l-primary/75 transition-all duration-300 shadow-sm flex flex-col justify-between hover:-translate-y-px h-[115px] ${cardClass}`}>
-                <span className={`text-[8px] font-black uppercase tracking-widest block mb-1 flex items-center gap-1.5 ${cardTitleClass}`}>
+              <div className={`p-3 rounded-xl border border-l-4 border-l-primary/75 transition-all duration-300 shadow-sm flex flex-col justify-between hover:-translate-y-px h-[82px] ${cardClass}`}>
+                <span className={`text-[8px] font-black uppercase tracking-widest block mb-0.5 flex items-center gap-1.5 ${cardTitleClass}`}>
                   <Clock className="w-3.5 h-3.5 text-primary" />
                   <span>Session Status</span>
                 </span>
@@ -435,19 +435,19 @@ export const FocusOverlay = () => {
                   Study Session Active
                 </p>
                 {session.documentTitle ? (
-                  <span className={`text-[8px] font-bold truncate mt-1.5 block ${cardMetaTextClass}`}>
+                  <span className={`text-[8px] font-bold truncate mt-0.5 block ${cardMetaTextClass}`}>
                     📖 Source: {session.documentTitle}
                   </span>
                 ) : (
-                  <span className={`text-[8px] font-bold truncate mt-1.5 block ${cardMetaTextClass}`}>
+                  <span className={`text-[8px] font-bold truncate mt-0.5 block ${cardMetaTextClass}`}>
                     ⏱️ Logging minutes to daily goals
                   </span>
                 )}
               </div>
 
               {/* Goal Card */}
-              <div className={`p-4 rounded-xl border border-l-4 border-l-accent/75 transition-all duration-300 shadow-sm flex flex-col justify-between hover:-translate-y-px h-[115px] ${cardClass}`}>
-                <span className={`text-[8px] font-black uppercase tracking-widest block mb-1 flex items-center gap-1.5 ${cardTitleClass}`}>
+              <div className={`p-3 rounded-xl border border-l-4 border-l-accent/75 transition-all duration-300 shadow-sm flex flex-col justify-between hover:-translate-y-px h-[82px] ${cardClass}`}>
+                <span className={`text-[8px] font-black uppercase tracking-widest block mb-0.5 flex items-center gap-1.5 ${cardTitleClass}`}>
                   <Target className="w-3.5 h-3.5 text-accent" />
                   <span>Focus Goal</span>
                 </span>
@@ -486,7 +486,7 @@ export const FocusOverlay = () => {
             </div>
 
             {/* Column 2: Timer Centerpiece (Visual Hero - Always stays centered) */}
-            <div className="flex flex-col items-center justify-center w-full max-w-[360px] mx-auto order-1 lg:order-2">
+            <div className="flex flex-col items-center justify-center w-full max-w-[340px] mx-auto order-1 lg:order-2">
               <FocusProgress
                 progressPercent={progressPercent}
                 formattedTime={formattedTime}
@@ -494,7 +494,7 @@ export const FocusOverlay = () => {
               />
 
               {/* Playback Circular Controls */}
-              <div className="flex items-center gap-4.5 py-1.5 mt-1 shrink-0">
+              <div className="flex items-center gap-4.5 py-1 mt-0.5 shrink-0">
                 {canCancel() && (
                   <button
                     onClick={handleCancel}
@@ -552,7 +552,7 @@ export const FocusOverlay = () => {
               </div>
 
               {/* Atmosphere Landscapes Channel Selector directly integrated in Center Column */}
-              <div className="w-full mt-10 flex flex-col gap-2.5 text-left bg-bg-surface/40 backdrop-blur-xs border border-border/80 p-4 rounded-2xl shadow-theme-sm transition-all duration-300">
+              <div className="w-full mt-3.5 flex flex-col gap-2 text-left bg-bg-surface/40 backdrop-blur-xs border border-border/80 p-2.5 rounded-2xl shadow-theme-sm transition-all duration-300">
                 <div className={`flex items-center justify-between text-[8px] font-black uppercase tracking-widest w-full px-0.5 ${cardMetaTextClass}`}>
                   <span className="flex items-center gap-1.5">
                     <Music4 className="w-3.5 h-3.5 text-primary" />
@@ -570,11 +570,11 @@ export const FocusOverlay = () => {
                   </button>
                 </div>
 
-                <div className="w-full relative mt-1">
+                <div className="w-full relative mt-0.5">
                   <div 
                     ref={scrollRef}
                     onWheel={handleWheel}
-                    className="flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide py-0.5 px-0.5 w-full select-none scroll-smooth"
+                    className="flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide py-0 px-0.5 w-full select-none scroll-smooth"
                   >
                     {ambientSounds
                       .filter((sound) => sound.category === "Focus Ambience")
@@ -589,7 +589,7 @@ export const FocusOverlay = () => {
                             key={sound.id}
                             disabled={!isSoundEnabled}
                             onClick={() => setAmbientSound(sound.id)}
-                            className={`h-7.5 px-3 rounded-full text-[9px] font-bold transition-all duration-305 cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 focus-visible:ring-2 focus-visible:ring-primary/50 outline-none ${
+                            className={`h-7 px-3 rounded-full text-[9px] font-bold transition-all duration-305 cursor-pointer flex items-center justify-center gap-1.5 border shrink-0 focus-visible:ring-2 focus-visible:ring-primary/50 outline-none ${
                               !isSoundEnabled
                                 ? "opacity-25 bg-bg-surface/20 border-border cursor-not-allowed border-dashed text-text-muted"
                                 : isSelected ? landscapesBtnSelected : landscapesBtnUnselected
@@ -606,7 +606,7 @@ export const FocusOverlay = () => {
 
                 {/* Volume Control bar */}
                 {currentSoundId && (
-                  <div className={`flex items-center gap-2 mt-2 px-2 py-1 rounded-lg w-full ${volumeSliderContainerClass}`}>
+                  <div className={`flex items-center gap-2 mt-1.5 px-2 py-1 rounded-lg w-full ${volumeSliderContainerClass}`}>
                     <button
                       onClick={toggleMute}
                       className="text-text-secondary hover:text-text-primary transition-colors cursor-pointer focus:outline-none shrink-0"
@@ -634,16 +634,16 @@ export const FocusOverlay = () => {
             </div>
 
             {/* Column 3: Environment, Target & Streaks (3 Compact Cards) */}
-            <div className="flex flex-col gap-3 order-3 w-full max-w-sm mx-auto">
+            <div className="flex flex-col gap-2.5 order-3 w-full max-w-sm mx-auto">
               
               {/* Environment details card */}
-              <div className={`p-3 rounded-xl border border-l-4 border-l-primary/75 transition-all duration-300 shadow-sm flex items-center justify-between hover:-translate-y-px h-[75px] ${cardClass}`}>
+              <div className={`p-2.5 rounded-xl border border-l-4 border-l-primary/75 transition-all duration-300 shadow-sm flex items-center justify-between hover:-translate-y-px h-[64px] ${cardClass}`}>
                 <div className="flex flex-col text-left min-w-0">
                   <span className={`text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5 leading-none ${cardTitleClass}`}>
                     <Music4 className="w-3.5 h-3.5 text-primary" />
                     <span>Atmosphere</span>
                   </span>
-                  <h4 className={`text-xs font-extrabold truncate mt-1 leading-tight ${cardContentTextClass}`}>{soundName}</h4>
+                  <h4 className={`text-xs font-extrabold truncate mt-0.5 leading-tight ${cardContentTextClass}`}>{soundName}</h4>
                   <span className={`text-[8px] font-bold truncate mt-0.5 leading-none ${cardMetaTextClass}`}>
                     {currentSoundObj ? currentSoundObj.subtitle : "Silence off - pure study"}
                   </span>
@@ -658,18 +658,18 @@ export const FocusOverlay = () => {
               </div>
 
               {/* Progress target progress card */}
-              <div className={`p-3 rounded-xl border border-l-4 border-l-purple-500/75 transition-all duration-305 shadow-sm flex flex-col justify-between hover:-translate-y-px h-[75px] ${cardClass}`}>
+              <div className={`p-2.5 rounded-xl border border-l-4 border-l-purple-500/75 transition-all duration-305 shadow-sm flex flex-col justify-between hover:-translate-y-px h-[64px] ${cardClass}`}>
                 <span className={`text-[8px] font-black uppercase tracking-widest block mb-0.5 flex items-center gap-1.5 leading-none ${cardTitleClass}`}>
                   <Calendar className="w-3.5 h-3.5 text-purple-400" />
                   <span>Today's Target</span>
                 </span>
-                <div className={`flex items-center justify-between text-[9px] font-bold mt-1 leading-none ${cardMetaTextClass}`}>
+                <div className={`flex items-center justify-between text-[9px] font-bold mt-0.5 leading-none ${cardMetaTextClass}`}>
                   <span>Target completed</span>
                   <span className={`font-mono leading-none ${cardContentTextClass}`}>
                     {Math.round((progressPercent / 100) * session.duration / 60)} / {Math.round(session.duration / 60)}m
                   </span>
                 </div>
-                <div className={`w-full rounded-full h-1 mt-1 overflow-hidden ${targetProgressBgClass}`}>
+                <div className={`w-full rounded-full h-1 mt-0.5 overflow-hidden ${targetProgressBgClass}`}>
                   <div 
                     className="bg-gradient-to-r from-primary to-accent h-full rounded-full transition-all duration-300"
                     style={{ width: `${Math.min(100, progressPercent)}%` }}
@@ -678,15 +678,15 @@ export const FocusOverlay = () => {
               </div>
 
               {/* Study Streak Card */}
-              <div className={`p-3 rounded-xl border border-l-4 border-l-amber-500/75 transition-all duration-305 shadow-sm flex items-center gap-3 hover:-translate-y-px h-[75px] ${cardClass}`}>
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${streakCardIconBg}`}>
-                  <Zap className="w-4 h-4 text-amber-500 fill-current animate-pulse" />
+              <div className={`p-2.5 rounded-xl border border-l-4 border-l-amber-500/75 transition-all duration-305 shadow-sm flex items-center gap-3 hover:-translate-y-px h-[64px] ${cardClass}`}>
+                <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${streakCardIconBg}`}>
+                  <Zap className="w-3.5 h-3.5 text-amber-500 fill-current animate-pulse" />
                 </div>
                 <div className="flex flex-col text-left min-w-0">
                   <span className={`text-[8px] font-black uppercase tracking-widest leading-none ${cardTitleClass}`}>
                     Active Streak
                   </span>
-                  <h4 className={`text-xs font-extrabold mt-1 leading-tight font-mono ${cardContentTextClass}`}>
+                  <h4 className={`text-xs font-extrabold mt-0.5 leading-tight font-mono ${cardContentTextClass}`}>
                     {stats.currentStreak || 0} Days Streak
                   </h4>
                   <span className={`text-[8px] font-bold truncate mt-0.5 leading-none ${cardMetaTextClass}`}>

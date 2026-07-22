@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Bell, Menu, Search, Clock } from "lucide-react";
 import ConfirmationModal from "../common/ConfirmationModal";
 import useStudySession from "../../hooks/useStudySession";
+import { getUserDisplayName, getUserInitials } from "../../utils/userUtils";
 
 const Header = ({ toggleMobileMenu, toggleDesktopSidebar, isSidebarCollapsed }) => {
   const { user, logout } = useAuth();
@@ -26,12 +27,7 @@ const Header = ({ toggleMobileMenu, toggleDesktopSidebar, isSidebarCollapsed }) 
   }, []);
 
   const getInitials = () => {
-    if (!user?.username) return "CP";
-    const parts = user.username.split(/[._\s]+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return user.username.slice(0, 2).toUpperCase();
+    return getUserInitials(user);
   };
 
   useEffect(() => {
@@ -204,10 +200,10 @@ const Header = ({ toggleMobileMenu, toggleDesktopSidebar, isSidebarCollapsed }) 
               aria-expanded={isOpen}
               aria-haspopup="true"
             >
-              {avatarSrc ? (
+               {avatarSrc ? (
                 <img
                   src={avatarSrc}
-                  alt={user?.username}
+                  alt={getUserDisplayName(user)}
                   className="w-8 h-8 rounded-full object-cover shadow-xs border border-border shrink-0"
                   onError={() => setImgError(true)}
                 />
@@ -218,7 +214,7 @@ const Header = ({ toggleMobileMenu, toggleDesktopSidebar, isSidebarCollapsed }) 
               )}
 
               <span className="hidden sm:inline-block text-xs font-bold truncate max-w-[80px] md:max-w-[100px] transition-colors">
-                {user?.username || "Guest"}
+                {getUserDisplayName(user)}
               </span>
             </button>
 
@@ -231,7 +227,7 @@ const Header = ({ toggleMobileMenu, toggleDesktopSidebar, isSidebarCollapsed }) 
                   {avatarSrc ? (
                     <img
                       src={avatarSrc}
-                      alt={user?.username}
+                      alt={getUserDisplayName(user)}
                       className="w-14 h-14 rounded-full object-cover mb-2.5 shadow-md border-2 border-border"
                       onError={() => setImgError(true)}
                     />
@@ -242,7 +238,7 @@ const Header = ({ toggleMobileMenu, toggleDesktopSidebar, isSidebarCollapsed }) 
                   )}
 
                   <h3 className="text-sm font-bold leading-tight">
-                    {user?.username || "User"}
+                    {getUserDisplayName(user)}
                   </h3>
 
                   <div className="mt-1">

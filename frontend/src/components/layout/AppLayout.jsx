@@ -70,7 +70,7 @@ const AppLayout = ({ children }) => {
         <main className="flex-1 overflow-x-hidden overflow-y-auto transition-colors duration-300 bg-bg-base">
           <div className={`${
             isFocusPage 
-              ? "max-w-[1400px] w-full mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-6"
+              ? "max-w-[1400px] w-full mx-auto px-4 sm:px-6 md:px-8 lg:px-10 py-3 md:py-4"
               : "p-4 md:p-8 max-w-[1920px] mx-auto w-full"
           }`}>
             {children}

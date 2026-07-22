@@ -13,6 +13,9 @@ function getDisplayName(user) {
     if (user?.fullName && isValidDisplayName(user.fullName.split(" ")[0]))
         return user.fullName.split(" ")[0];
 
+    if (user?.name && isValidDisplayName(user.name.split(" ")[0]))
+        return user.name.split(" ")[0];
+
     if (user?.firstName && isValidDisplayName(user.firstName))
         return user.firstName;
 

@@ -133,7 +133,7 @@ const QuizTakePage = () => {
   }
 
   const currentQuestion = quiz.questions[currentQuestionIndex];
-  const hasAnsweredCurrentQuestion = selectedAnswers.hasOwnProperty(currentQuestion._id);
+  const hasAnsweredCurrentQuestion = Object.prototype.hasOwnProperty.call(selectedAnswers, currentQuestion._id);
   const answeredCount = Object.keys(selectedAnswers).length;
   const unansweredCount = quiz.questions.length - answeredCount;
   const completionPct = Math.round((currentQuestionIndex / quiz.questions.length) * 100);
@@ -173,7 +173,7 @@ const QuizTakePage = () => {
         {/* Compact Sub-Progress Question Navigator */}
         <div className="flex items-center justify-center gap-1.5 pt-1.5 flex-wrap border-t border-slate-100">
           {quiz.questions.map((q, idx) => {
-            const isAnswered = selectedAnswers.hasOwnProperty(q._id);
+            const isAnswered = Object.prototype.hasOwnProperty.call(selectedAnswers, q._id);
             const isCurrent = idx === currentQuestionIndex;
 
             return (

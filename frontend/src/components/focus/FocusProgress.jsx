@@ -30,11 +30,11 @@ export const FocusProgress = ({ progressPercent = 0, formattedTime = "00:00", st
   const labelTextClass = "text-text-muted";
 
   return (
-    <div className="relative flex items-center justify-center select-none p-2">
+    <div className="relative flex items-center justify-center select-none p-1">
       {/* Immersive background soft glow ring */}
       <div 
-        className={`absolute w-[clamp(180px,25vh,290px)] h-[clamp(180px,25vh,290px)] rounded-full bg-primary/5 transition-all duration-1000 ${
-          isRunning ? "opacity-100 scale-105 blur-3xl animate-pulse" : "opacity-30 blur-2xl"
+        className={`absolute w-[clamp(130px,18vh,170px)] h-[clamp(130px,18vh,170px)] rounded-full bg-primary/5 transition-all duration-1000 ${
+          isRunning ? "opacity-100 scale-105 blur-2xl animate-pulse" : "opacity-30 blur-xl"
         }`} 
       />
 
@@ -48,11 +48,11 @@ export const FocusProgress = ({ progressPercent = 0, formattedTime = "00:00", st
       )}
       
       {/* Outer decorative orbit track */}
-      <div className={`absolute w-[clamp(160px,22vh,230px)] h-[clamp(160px,22vh,230px)] rounded-full border pointer-events-none ${orbitBorderClass}`} />
+      <div className={`absolute w-[clamp(115px,16vh,145px)] h-[clamp(115px,16vh,145px)] rounded-full border pointer-events-none ${orbitBorderClass}`} />
 
       {/* Hero Circular Progress Visualizer */}
-      <div className={`relative w-[clamp(150px,21vh,220px)] h-[clamp(150px,21vh,220px)] transition-all duration-300 ${isRunning ? "animate-timer-breathe" : ""}`}>
-        <svg className="w-full h-full transform -rotate-90 filter drop-shadow-sm" viewBox="0 0 220 220">
+      <div className={`relative w-[clamp(110px,15vh,135px)] h-[clamp(110px,15vh,135px)] transition-all duration-300 ${isRunning ? "animate-timer-breathe" : ""}`}>
+        <svg className="w-full h-full transform -rotate-90 filter drop-shadow-xs" viewBox="0 0 220 220">
           <defs>
             <linearGradient id="timer-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="var(--color-primary)" />
@@ -87,13 +87,13 @@ export const FocusProgress = ({ progressPercent = 0, formattedTime = "00:00", st
 
         {/* Central clock typography */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className={`text-[clamp(1.7rem,5vh,2.5rem)] font-extrabold tracking-tight leading-none font-mono ${timeTextClass}`}>
+          <span className={`text-[clamp(1.1rem,3vh,1.4rem)] font-extrabold tracking-tight leading-none font-mono ${timeTextClass}`}>
             {formattedTime}
           </span>
-          <span className={`text-[clamp(7px,1vh,8px)] font-black uppercase tracking-widest mt-1 ${labelTextClass}`}>
+          <span className={`text-[clamp(6px,0.8vh,7px)] font-black uppercase tracking-widest mt-0.5 ${labelTextClass}`}>
             STUDY SESSION
           </span>
-          <span className={`text-[clamp(7px,1vh,8px)] font-bold uppercase tracking-wider mt-0.5 transition-colors ${
+          <span className={`text-[clamp(6px,0.8vh,7px)] font-bold uppercase tracking-wider mt-0.5 transition-colors ${
             isRunning ? "text-primary font-black" : "text-text-muted"
           }`}>
             {status === STATUS_PAUSED ? "Paused" : isRunning ? "Running" : "Ready"}

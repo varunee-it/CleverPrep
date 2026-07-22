@@ -5,6 +5,7 @@ import progressService from "../../services/progressService";
 import { useAuth } from "../../context/AuthContext";
 import moment from "moment";
 import { User, Lock, Bell, BarChart3, Settings, ShieldCheck } from "lucide-react";
+import { getUserDisplayName, getUserInitials } from "../../utils/userUtils";
 
 import ProfileSkeleton from "./components/ProfileSkeleton";
 import AccountTab from "./components/AccountTab";
@@ -40,26 +41,16 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const statsRes = await progressService.getDashboardData();
-        if (statsRes && statsRes.data) {
-          setStatsData(statsRes.data);
-        }
+        const res = await progressService.getStatistics();
+        setStatsData(res.data);
       } catch (err) {
         console.error("Failed to load statistics:", err);
       } finally {
         setStatsLoading(false);
       }
     };
-
-    // Load statistics in background
     fetchStats();
-    
-    // Simulate minor visual delay for premium loading experience
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 450);
-
-    return () => clearTimeout(timer);
+    setLoading(false);
   }, []);
 
   if (loading) {
@@ -67,12 +58,7 @@ const ProfilePage = () => {
   }
 
   const getInitials = () => {
-    if (!user?.username) return "CP";
-    const parts = user.username.split(/[._\s]+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return user.username.slice(0, 2).toUpperCase();
+    return getUserInitials(user);
   };
 
   const getAvatarUrl = () => {
@@ -111,7 +97,7 @@ const ProfilePage = () => {
 
         <div className="text-center sm:text-left flex-1 pt-1 space-y-1">
           <h2 className="text-2xl font-bold text-slate-900 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-            {user?.username || "Learner"}{" "}
+            {getUserDisplayName(user)}{" "}
             {user?.isEmailVerified && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100/50">
                 Verified Student <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" strokeWidth={2.5} />
@@ -143,100 +129,110 @@ const ProfilePage = () => {
             {/* Account Settings */}
             <button
               onClick={() => setActiveSection("account")}
-              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer ${
+              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer border ${
                 activeSection === "account"
-                  ? "bg-emerald-50/60 text-emerald-700 font-bold"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-primary/10 border-primary/20 text-text-primary font-bold shadow-xs"
+                  : "bg-transparent border-transparent text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary"
               }`}
             >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-                activeSection === "account" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600"
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                activeSection === "account" 
+                  ? "text-primary bg-primary/10 border border-primary/20" 
+                  : "bg-bg-surface-hover text-text-muted group-hover:bg-primary/10 group-hover:text-primary"
               }`}>
-                <User className="w-4.5 h-4.5" />
+                <User className="w-4 h-4" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">Personal Information</p>
-                <p className="text-[11px] font-medium text-slate-400 mt-0.5">Manage username and avatar picture</p>
+                <p className="text-[11px] font-medium text-text-muted mt-0.5">Manage username and avatar picture</p>
               </div>
             </button>
 
             {/* Security Settings */}
             <button
               onClick={() => setActiveSection("security")}
-              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer ${
+              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer border ${
                 activeSection === "security"
-                  ? "bg-emerald-50/60 text-emerald-700 font-bold"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-primary/10 border-primary/20 text-text-primary font-bold shadow-xs"
+                  : "bg-transparent border-transparent text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary"
               }`}
             >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-                activeSection === "security" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600"
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                activeSection === "security" 
+                  ? "text-primary bg-primary/10 border border-primary/20" 
+                  : "bg-bg-surface-hover text-text-muted group-hover:bg-primary/10 group-hover:text-primary"
               }`}>
-                <Lock className="w-4.5 h-4.5" />
+                <Lock className="w-4 h-4" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">Security & Password</p>
-                <p className="text-[11px] font-medium text-slate-400 mt-0.5">Update credentials and secure keys</p>
+                <p className="text-[11px] font-medium text-text-muted mt-0.5">Update credentials and secure keys</p>
               </div>
             </button>
 
             {/* Preferences Settings */}
             <button
               onClick={() => setActiveSection("notifications")}
-              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer ${
+              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer border ${
                 activeSection === "notifications"
-                  ? "bg-emerald-50/60 text-emerald-700 font-bold"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-primary/10 border-primary/20 text-text-primary font-bold shadow-xs"
+                  : "bg-transparent border-transparent text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary"
               }`}
             >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-                activeSection === "notifications" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600"
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                activeSection === "notifications" 
+                  ? "text-primary bg-primary/10 border border-primary/20" 
+                  : "bg-bg-surface-hover text-text-muted group-hover:bg-primary/10 group-hover:text-primary"
               }`}>
-                <Bell className="w-4.5 h-4.5" />
+                <Bell className="w-4 h-4" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">Notifications</p>
-                <p className="text-[11px] font-medium text-slate-400 mt-0.5">Configure weekly digest alerts</p>
+                <p className="text-[11px] font-medium text-text-muted mt-0.5">Configure weekly digest alerts</p>
               </div>
             </button>
 
             {/* Statistics */}
             <button
               onClick={() => setActiveSection("statistics")}
-              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer ${
+              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer border ${
                 activeSection === "statistics"
-                  ? "bg-emerald-50/60 text-emerald-700 font-bold"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-primary/10 border-primary/20 text-text-primary font-bold shadow-xs"
+                  : "bg-transparent border-transparent text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary"
               }`}
             >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-                activeSection === "statistics" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600"
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                activeSection === "statistics" 
+                  ? "text-primary bg-primary/10 border border-primary/20" 
+                  : "bg-bg-surface-hover text-text-muted group-hover:bg-primary/10 group-hover:text-primary"
               }`}>
-                <BarChart3 className="w-4.5 h-4.5" />
+                <BarChart3 className="w-4 h-4" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">Learning Analytics</p>
-                <p className="text-[11px] font-medium text-slate-400 mt-0.5">Verify study cards and quiz results</p>
+                <p className="text-[11px] font-medium text-text-muted mt-0.5">Verify study cards and quiz results</p>
               </div>
             </button>
 
             {/* Account Control Settings */}
             <button
               onClick={() => setActiveSection("settings")}
-              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer ${
+              className={`flex items-center gap-4 p-4.5 rounded-2xl transition-all duration-200 text-left w-full group cursor-pointer border ${
                 activeSection === "settings"
-                  ? "bg-emerald-50/60 text-emerald-700 font-bold"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-primary/10 border-primary/20 text-text-primary font-bold shadow-xs"
+                  : "bg-transparent border-transparent text-text-secondary hover:bg-bg-surface-hover hover:text-text-primary"
               }`}
             >
-              <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-                activeSection === "settings" ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-600 group-hover:bg-emerald-50 group-hover:text-emerald-600"
+              <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
+                activeSection === "settings" 
+                  ? "text-primary bg-primary/10 border border-primary/20" 
+                  : "bg-bg-surface-hover text-text-muted group-hover:bg-primary/10 group-hover:text-primary"
               }`}>
-                <Settings className="w-4.5 h-4.5" />
+                <Settings className="w-4 h-4" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-semibold">Settings & Control</p>
-                <p className="text-[11px] font-medium text-slate-400 mt-0.5">Export data or delete profile details</p>
+                <p className="text-[11px] font-medium text-text-muted mt-0.5">Export data or delete profile details</p>
               </div>
             </button>
           </div>

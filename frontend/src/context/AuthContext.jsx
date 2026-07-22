@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
 } from "react";
+import { getProfile } from "../services/authService";
 
 // ==========================================
 // Create Context
@@ -40,39 +41,65 @@ export const AuthProvider = ({ children }) => {
     useState(false);
 
   // =========================
-  // Check Auth On App Load
-  // =========================
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  // =========================
   // Check Authentication
   // =========================
   const checkAuthStatus = async () => {
     try {
       const token = localStorage.getItem("token");
-
       const userStr = localStorage.getItem("user");
 
-      if (token && userStr) {
-        const userData = JSON.parse(userStr);
+      if (token) {
+        // Optimistically set from local storage cache first
+        if (userStr) {
+          try {
+            const cachedUser = JSON.parse(userStr);
+            setUser(cachedUser);
+            setIsAuthenticated(true);
+          } catch (e) {
+            console.error("[Auth Context] Failed to parse cached user:", e);
+          }
+        }
 
-        setUser(userData);
-
-        setIsAuthenticated(true);
+        // Fetch fresh profile from backend to verify name and clear out outdated profiles
+        try {
+          const profileRes = await getProfile();
+          if (profileRes && profileRes.data) {
+            const freshUser = profileRes.data;
+            localStorage.setItem("user", JSON.stringify(freshUser));
+            setUser(freshUser);
+            setIsAuthenticated(true);
+            console.log("[Auth Context] Profile data refreshed from backend:", freshUser);
+          }
+        } catch (fetchError) {
+          console.error("[Auth Context] Error fetching fresh profile:", fetchError);
+          // Force logout on authentication error (e.g. 401 Unauthorized)
+          if (fetchError.statusCode === 401 || fetchError.status === 401) {
+            logout();
+            return;
+          }
+        }
+      } else {
+        // Clear variables if no token present
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error(
         "Auth check failed:",
         error
       );
-
       logout();
     } finally {
       setLoading(false);
     }
   };
+
+  // =========================
+  // Check Auth On App Load
+  // =========================
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
   // =========================
   // Login

@@ -235,8 +235,11 @@ export const login = async (req, res, next) => {
             user: {
                 id: user._id,
                 username: user.username,
+                name: user.name,
                 email: user.email,
-                profileImage: user.profileImage,
+                avatar: user.profileImage || user.avatar,
+                profileImage: user.profileImage || user.avatar,
+                provider: user.provider,
                 onboarding: user.onboarding
             },
             token,
@@ -370,8 +373,11 @@ export const verifyOtp = async (req, res, next) => {
             user: {
                 id: user._id,
                 username: user.username,
+                name: user.name,
                 email: user.email,
-                profileImage: user.profileImage,
+                avatar: user.profileImage || user.avatar,
+                profileImage: user.profileImage || user.avatar,
+                provider: user.provider,
                 onboarding: user.onboarding
             },
             token
@@ -553,8 +559,11 @@ export const getProfile = async (req, res, next) => {
             data: {
                 id: user._id,
                 username: user.username,
+                name: user.name,
                 email: user.email,
-                profileImage: user.profileImage, 
+                avatar: user.profileImage || user.avatar,
+                profileImage: user.profileImage || user.avatar, 
+                provider: user.provider,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
                 onboarding: user.onboarding
@@ -628,8 +637,10 @@ export const updateProfile = async (req, res, next) => {
             data: {
                 id: user._id,
                 username: user.username,
+                name: user.name,
                 email: user.email,
-                profileImage: user.profileImage, 
+                avatar: user.profileImage || user.avatar,
+                profileImage: user.profileImage || user.avatar, 
                 preferredStudyName: user.preferredStudyName,
                 notificationPrefs: user.notificationPrefs,
                 isEmailVerified: user.isEmailVerified,
@@ -814,6 +825,10 @@ export const googleSignIn = async (req, res, next) => {
                 user.profileImage = picture;
                 isModified = true;
             }
+            if (name && user.name !== name) {
+                user.name = name;
+                isModified = true;
+            }
 
             if (isModified) {
                 await user.save();
@@ -830,6 +845,7 @@ export const googleSignIn = async (req, res, next) => {
 
             user = await User.create({
                 username,
+                name,
                 email,
                 isEmailVerified: true,
                 provider: "google",
@@ -851,7 +867,9 @@ export const googleSignIn = async (req, res, next) => {
             user: {
                 id: user._id,
                 username: user.username,
+                name: user.name,
                 email: user.email,
+                avatar: user.profileImage || user.avatar,
                 profileImage: user.profileImage || user.avatar,
                 provider: user.provider,
                 onboarding: user.onboarding

@@ -63,6 +63,7 @@ const PodcastManager = ({ documentId, documentTitle }) => {
 
   const hasValidAccountName = () => {
       if (user?.fullName && isValidDisplayName(user.fullName.split(" ")[0])) return true;
+      if (user?.name && isValidDisplayName(user.name.split(" ")[0])) return true;
       if (user?.firstName && isValidDisplayName(user.firstName)) return true;
       if (user?.displayName && isValidDisplayName(user.displayName)) return true;
       if (user?.username && isValidDisplayName(user.username.trim())) return true;

@@ -4,6 +4,7 @@ import authService from "../../../services/authService";
 import toast from "react-hot-toast";
 import { Camera, Trash2, ShieldCheck, Loader2 } from "lucide-react";
 import ConfirmationModal from "../../../components/common/ConfirmationModal";
+import { getUserDisplayName, getUserInitials } from "../../../utils/userUtils";
 
 const AvatarUpload = ({ isGoogleUser }) => {
   const { user, updateUser } = useAuth();
@@ -14,12 +15,7 @@ const AvatarUpload = ({ isGoogleUser }) => {
   const fileInputRef = useRef(null);
 
   const getInitials = () => {
-    if (!user?.username) return "CP";
-    const parts = user.username.split(/[._\s]+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return user.username.slice(0, 2).toUpperCase();
+    return getUserInitials(user);
   };
 
   const handleFileChange = async (e) => {
@@ -145,7 +141,7 @@ const AvatarUpload = ({ isGoogleUser }) => {
       <div className="text-center sm:text-left flex-1 space-y-2">
         <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
           <h2 className="text-xl font-bold text-slate-900 leading-tight">
-            {user?.username || "CleverPrep Student"}
+            {getUserDisplayName(user)}
           </h2>
           {user?.isEmailVerified && (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-100/50">
