@@ -66,45 +66,63 @@ export const useTourTransition = (
     let element = null;
     let isTimedOut = false;
 
-    const findTargetElement = async (timeoutMs) => {
-      const timeoutPromise = new Promise((resolve) => setTimeout(() => {
-        isTimedOut = true;
-        resolve(null);
-      }, timeoutMs));
-
-      const findElementPromise = (async () => {
-        let el = document.querySelector(nextStepConfig.targetSelector);
-        let isMeasurable = false;
+    const findTargetElement = (timeoutMs) => {
+      return new Promise((resolve) => {
+        const selector = nextStepConfig.targetSelector;
         
-        while (!isTimedOut) {
+        // 1. Check immediately
+        const checkElement = () => {
+          const el = document.querySelector(selector);
           if (el) {
             const rect = el.getBoundingClientRect();
-            // Check if element is visible and measurable
             if (rect.width > 0 && rect.height > 0) {
-              isMeasurable = true;
-              break;
+              return el;
             }
           }
-          await new Promise((resolve) => setTimeout(resolve, 80));
-          el = document.querySelector(nextStepConfig.targetSelector);
-        }
-        return isMeasurable ? el : null;
-      })();
+          return null;
+        };
 
-      return await Promise.race([findElementPromise, timeoutPromise]);
+        const initialEl = checkElement();
+        if (initialEl) {
+          return resolve(initialEl);
+        }
+
+        // 2. Set up MutationObserver to watch for DOM changes
+        let isResolved = false;
+        const observer = new MutationObserver(() => {
+          const el = checkElement();
+          if (el && !isResolved) {
+            isResolved = true;
+            observer.disconnect();
+            clearTimeout(timeoutId);
+            resolve(el);
+          }
+        });
+
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true, // Watch for display/visibility class changes
+        });
+
+        // 3. Fallback timeout
+        const timeoutId = setTimeout(() => {
+          if (!isResolved) {
+            isResolved = true;
+            observer.disconnect();
+            resolve(null);
+          }
+        }, timeoutMs);
+      });
     };
 
     if (nextStepConfig.targetSelector) {
-      element = await findTargetElement(5000); // 5-second wait
+      element = await findTargetElement(8000); // 8-second wait for heavy pages
 
-      // Graceful fallback: If target selector cannot be found, silently skip the step
       if (!element) {
-        console.log(`[Tour] Target ${nextStepConfig.targetSelector} not found. Silently skipping step ${nextIndex + 1}.`);
+        console.error(`[Tour Error] CRITICAL: Target ${nextStepConfig.targetSelector} not found after 8s wait on route ${location.pathname}. Check if the element exists in the DOM.`);
         setIsTransitioning(false);
-        if (nextIndex < tourSteps.length - 1) {
-          transitionToStep(nextIndex + 1);
-        }
-        return;
+        return; // Halt transition immediately instead of silently skipping
       }
     } else {
       // Step has no target selector (e.g. center step)
@@ -195,10 +213,16 @@ export const useTourTransition = (
     trackAnalytics
   ]);
 
+  const resetTransition = useCallback(() => {
+    setIsTransitioning(false);
+    setIsTooltipFading(false);
+  }, []);
+
   return {
     isTransitioning,
     isTooltipFading,
     transitionToStep,
+    resetTransition,
   };
 };
 

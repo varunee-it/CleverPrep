@@ -1207,6 +1207,7 @@ export const updateOnboardingStatus = async (req, res, next) => {
             user.onboarding.autoShowNewTours = autoShowNewTours;
         }
 
+        user.markModified('onboarding');
         await user.save();
 
         res.status(200).json({

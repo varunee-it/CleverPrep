@@ -84,7 +84,8 @@ export const TourProvider = ({ children }) => {
   const {
     isTransitioning,
     isTooltipFading,
-    transitionToStep
+    transitionToStep,
+    resetTransition
   } = useTourTransition(
     currentStepIndex,
     setCurrentStepIndex,
@@ -118,10 +119,10 @@ export const TourProvider = ({ children }) => {
       !user.onboarding?.hasCompletedTour &&
       location.pathname === "/dashboard" &&
       !isActive &&
-      sessionStorage.getItem("cleverprep_welcome_shown") !== "true"
+      localStorage.getItem(`cleverprep_welcome_shown_${user._id}`) !== "true"
     ) {
       setShowWelcomeModal(true);
-      sessionStorage.setItem("cleverprep_welcome_shown", "true");
+      localStorage.setItem(`cleverprep_welcome_shown_${user._id}`, "true");
     }
   }, [user, location.pathname, isActive]);
 
@@ -243,18 +244,21 @@ export const TourProvider = ({ children }) => {
     trackAnalytics("Tour Skipped", { stepIndexAtSkip: currentStepIndex });
     setIsActive(false);
     setShowExitModal(false);
+    setIsTourCompleting(false);
+    setIsBackdropFading(false);
+    setTargetRect(null);
+    resetTransition();
     
     // Save completion to database
     saveOnboardingStatus(true, user?.onboarding?.tourVersion || 1, user?.onboarding?.autoShowNewTours ?? true);
-  }, [currentStepIndex, user, trackAnalytics]);
+  }, [currentStepIndex, user, trackAnalytics, setTargetRect, resetTransition]);
 
-  // Exit the tour (shows modal confirmation dialog)
+  // Exit the tour (maps directly to skipTour now)
   const exitTour = useCallback(() => {
-    trackAnalytics("Tour Exit Prompted", { stepIndex: currentStepIndex });
-    setShowExitModal(true);
-  }, [currentStepIndex, trackAnalytics]);
+    skipTour();
+  }, [skipTour]);
 
-  // Confirm dismissal from exit modal
+  // Confirm dismissal from exit modal (legacy)
   const confirmExit = useCallback(() => {
     skipTour();
   }, [skipTour]);

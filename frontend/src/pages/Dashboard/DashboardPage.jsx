@@ -220,7 +220,7 @@ const DashboardPage = () => {
           )}
           <Link
             to="/documents"
-            className={`flex items-center justify-center gap-1.5 px-5 h-11 rounded-xl font-bold text-xs border shadow-xs transition-all hover:scale-[1.015] ${uploadBtnClass}`}
+            className={`flex items-center justify-center gap-1.5 px-5 h-11 rounded-xl font-bold text-xs border shadow-xs transition-all hover:scale-[1.015] ${uploadBtnClass} tour-upload-section`}
           >
             <Plus className="w-4.5 h-4.5" strokeWidth={2.5} />
             <span>Upload Document</span>

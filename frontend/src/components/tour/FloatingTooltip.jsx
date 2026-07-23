@@ -1,10 +1,28 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTour } from "../../context/TourContext";
 import { tourSteps } from "./data/tourSteps";
-import { X, ArrowRight, ArrowLeft } from "lucide-react";
+import { X, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import useTooltipPosition from "./hooks/useTooltipPosition";
 
 const FloatingTooltip = () => {
+  const [globalTheme, setGlobalTheme] = useState(() => localStorage.getItem("cleverprep_global_theme") || "white");
+  useEffect(() => {
+    const handleThemeChange = () => {
+      setGlobalTheme(localStorage.getItem("cleverprep_global_theme") || "white");
+    };
+    window.addEventListener("cleverprep-global-theme-changed", handleThemeChange);
+    return () => window.removeEventListener("cleverprep-global-theme-changed", handleThemeChange);
+  }, []);
+
+  const getThemeColor = () => {
+    switch (globalTheme) {
+      case "black": return "bg-slate-700 hover:bg-slate-600";
+      case "beige": return "bg-amber-600 hover:bg-amber-500";
+      case "lavender": return "bg-violet-600 hover:bg-violet-500";
+      default: return "bg-emerald-600 hover:bg-emerald-500";
+    }
+  };
+  const themeBgClass = getThemeColor();
   const {
     isActive,
     currentStepIndex,
@@ -121,8 +139,8 @@ const FloatingTooltip = () => {
     <div
       ref={tooltipRef}
       style={getStyle()}
-      className={`z-[95] w-80 sm:w-96 max-w-sm rounded-2xl bg-white border border-slate-200/50 shadow-2xl p-6 select-none transition-all duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] min-h-[190px] flex flex-col justify-between ${
-        isFinalStep ? "border-emerald-200 bg-white" : ""
+      className={`z-[95] w-[340px] sm:w-[400px] max-w-[90vw] rounded-[24px] bg-white/95 backdrop-blur-xl border shadow-2xl p-6 sm:p-7 select-none transition-all duration-[280ms] ease-[cubic-bezier(0.22,1,0.36,1)] min-h-[200px] flex flex-col justify-between ${
+        isFinalStep ? "border-emerald-200/60 shadow-[0_20px_50px_-12px_rgba(16,185,129,0.25)]" : "border-slate-200/60 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.15)]"
       }`}
       role="dialog"
       aria-modal="true"
@@ -167,9 +185,9 @@ const FloatingTooltip = () => {
                 Step {currentStepIndex + 1} of {totalSteps}
               </span>
               {/* Linear Progress bar with continuous slide animation */}
-              <div className="w-20 h-1 bg-slate-100 rounded-full overflow-hidden">
+              <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-emerald-500 transition-all duration-[350ms] ease-out"
+                  className={`h-full ${themeBgClass} transition-all duration-[350ms] ease-out`}
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
@@ -205,18 +223,19 @@ const FloatingTooltip = () => {
               <button
                 onClick={completeTour}
                 disabled={buttonsDisabled}
-                className="h-9 px-5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:pointer-events-none"
+                className={`h-10 px-6 ${themeBgClass} text-white text-xs font-bold rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:pointer-events-none flex items-center gap-2`}
               >
-                Start Learning
+                <span>Let's Begin</span>
+                <Check className="w-4 h-4" />
               </button>
             ) : (
               <button
                 onClick={nextStep}
                 disabled={buttonsDisabled}
-                className="inline-flex items-center justify-center gap-1.5 h-9 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:pointer-events-none"
+                className={`inline-flex items-center justify-center gap-2 h-10 px-5 ${themeBgClass} text-white text-xs font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer disabled:pointer-events-none`}
               >
                 <span>Next</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>
