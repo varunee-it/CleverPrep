@@ -55,6 +55,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ✅ Request Logger
 app.use((req, res, next) => {
+    if (req.url === '/favicon.ico') return next();
     console.log(`[Request Logger] ${req.method} ${req.url}`);
     next();
 });
@@ -82,6 +83,8 @@ app.get("/api/test", (req, res) => {
 });
 
 
+// ✅ Ignore favicon requests to prevent 404 log pollution
+app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 // ================= 404 HANDLER =================
 
