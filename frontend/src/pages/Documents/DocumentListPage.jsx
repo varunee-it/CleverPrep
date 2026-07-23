@@ -400,7 +400,7 @@ const DocumentListPage = () => {
             </div>
           ) : viewMode === "grid" ? (
             /* Grid View */
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5 pt-2">
               {filteredDocuments.map((doc) => (
                 <DocumentCard
                   key={doc._id}

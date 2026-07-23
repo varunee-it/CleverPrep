@@ -1,5 +1,6 @@
 import axiosInstance from "../utils/axiosInstance";
 import { API_PATHS } from "../utils/apiPaths";
+import { focusStatsEngine } from "./FocusStatsEngine";
 
 // ==========================================
 // Get Quizzes For Document
@@ -50,6 +51,12 @@ const submitQuiz = async (quizId, answers) => {
         answers,
       }
     );
+
+    try {
+      focusStatsEngine.recordActivityStreak();
+    } catch (e) {
+      console.warn("Failed to update activity streak on quiz submit:", e);
+    }
 
     return response.data;
   } catch (error) {

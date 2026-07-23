@@ -17,7 +17,9 @@ import {
     deleteAvatar,
     deleteAccount,
     updateOnboardingStatus,
-    resetOnboardingTour
+    resetOnboardingTour,
+    recordStudyActivity,
+    migrateStreakNow
 } from "../controllers/authController.js";
 import protect from "../middleware/auth.js";
 import { authLimiter, emailLimiter } from "../middleware/rateLimiter.js";
@@ -69,6 +71,8 @@ router.post('/profile/avatar', protect, avatarUpload.single('avatar'), uploadAva
 router.delete('/profile/avatar', protect, deleteAvatar);
 router.delete('/profile', protect, deleteAccount);
 router.post('/change-password', protect, changePassword);
+router.post('/streak/record', protect, recordStudyActivity);
+router.post('/streak/migrate', protect, migrateStreakNow);
 
 // Onboarding/Product Tour Routes
 router.put('/profile/onboarding', protect, updateOnboardingStatus);

@@ -1,4 +1,5 @@
 import focusStorage from "./FocusStorage";
+import { recordStudyStreak } from "./authService";
 
 class FocusStatsEngine {
   // Logs a completed session and updates streaks, goals, records, and achievements
@@ -63,6 +64,7 @@ class FocusStatsEngine {
       // 3. Update Streaks (Only on successful completed sessions)
       let streakIncreased = false;
       if (newLog.completionStatus === "Completed") {
+        recordStudyStreak(todayStr).catch(err => console.warn("Backend streak sync failed:", err));
         const lastActive = stats.lastActiveDate;
 
         if (!lastActive) {
@@ -218,6 +220,49 @@ class FocusStatsEngine {
     });
 
     return favorite;
+  }
+
+  recordActivityStreak() {
+    try {
+      const stats = focusStorage.loadStats();
+      const todayStr = new Date().toLocaleDateString("en-CA");
+      const lastActive = stats.lastActiveDate;
+
+      // Sync to backend asynchronously
+      recordStudyStreak(todayStr).catch(err => console.warn("Backend streak sync failed:", err));
+
+      if (!lastActive) {
+        stats.currentStreak = 1;
+        stats.longestStreak = 1;
+        stats.lastActiveDate = todayStr;
+      } else {
+        const diffDays = this._getDaysDifference(lastActive, todayStr);
+
+        if (diffDays === 0) {
+          return;
+        } else if (diffDays === 1) {
+          stats.currentStreak += 1;
+          stats.lastActiveDate = todayStr;
+        } else {
+          if (stats.streakFreezes > 0) {
+            stats.streakFreezes -= 1;
+            stats.currentStreak += 1;
+            stats.lastActiveDate = todayStr;
+          } else {
+            stats.currentStreak = 1;
+            stats.lastActiveDate = todayStr;
+          }
+        }
+      }
+
+      if (stats.currentStreak > stats.longestStreak) {
+        stats.longestStreak = stats.currentStreak;
+      }
+
+      focusStorage.saveStats(stats);
+    } catch (e) {
+      console.warn("Failed to record activity streak:", e);
+    }
   }
 }
 

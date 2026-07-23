@@ -36,9 +36,11 @@ import {
   BookOpen,
   FileText
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 export const FocusAnalyticsPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState({});
@@ -398,10 +400,10 @@ export const FocusAnalyticsPage = () => {
               },
               { 
                 title: "Current Streak", 
-                value: `${stats.currentStreak || 0} days`, 
-                trend: `Best streak: ${stats.longestStreak || 0}d`, 
+                value: `${user?.currentStreak || 0} days`, 
+                trend: `Best streak: ${user?.longestStreak || 0}d`, 
                 diff: "consecutive study logs", 
-                sparkline: renderSparkline([2, 3, 3, 4, 4, 4, stats.currentStreak || 0], "#f59e0b"),
+                sparkline: renderSparkline([2, 3, 3, 4, 4, 4, user?.currentStreak || 0], "#f59e0b"),
                 icon: <Zap className="w-4 h-4 text-amber-400 animate-pulse" /> 
               },
               { 
@@ -575,7 +577,7 @@ export const FocusAnalyticsPage = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { id: "first_session", title: "🌱 First Session", desc: "Logged focus block", reward: "+50 FP", pct: 100 },
-                { id: "streak_7", title: "🔥 7 Day Streak", desc: "Daily focus streak", reward: "+150 Coins", pct: stats.currentStreak >= 7 ? 100 : Math.round((stats.currentStreak / 7) * 100) },
+                { id: "streak_7", title: "🔥 7 Day Streak", desc: "Daily focus streak", reward: "+150 Coins", pct: (user?.currentStreak || 0) >= 7 ? 100 : Math.round(((user?.currentStreak || 0) / 7) * 100) },
                 { id: "sessions_30", title: "🌳 Forest Keeper", desc: "Logged 30 blocks", reward: "+100 FP", pct: Math.min(100, Math.round((history.length / 30) * 100)) },
                 { id: "night_owl", title: "🌙 Night Owl", desc: "Studied after 12 AM", reward: "+80 Coins", pct: achievements.find(a => a.id === "night_owl") ? 100 : 0 }
               ].map((crit) => {

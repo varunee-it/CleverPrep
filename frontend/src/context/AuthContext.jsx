@@ -4,7 +4,7 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { getProfile } from "../services/authService";
+import { getProfile, recordStudyStreak } from "../services/authService";
 
 // ==========================================
 // Create Context
@@ -62,10 +62,26 @@ export const AuthProvider = ({ children }) => {
 
         // Fetch fresh profile from backend to verify name and clear out outdated profiles
         try {
-          const profileRes = await getProfile();
+          const todayStr = new Date().toLocaleDateString("en-CA");
+          const profileRes = await getProfile(todayStr);
           if (profileRes && profileRes.data) {
             const freshUser = profileRes.data;
             localStorage.setItem("user", JSON.stringify(freshUser));
+            
+            // Sync local focus stats from backend streak data
+            try {
+              const statsStr = localStorage.getItem("cleverprep_focus_stats");
+              let statsObj = statsStr ? JSON.parse(statsStr) : {};
+              statsObj.currentStreak = freshUser.currentStreak || 0;
+              statsObj.longestStreak = freshUser.longestStreak || 0;
+              if (freshUser.lastStudyDate) {
+                statsObj.lastActiveDate = freshUser.lastStudyDate;
+              }
+              localStorage.setItem("cleverprep_focus_stats", JSON.stringify(statsObj));
+            } catch (statsErr) {
+              console.error("[Auth Context] Failed to sync focus stats:", statsErr);
+            }
+
             setUser(freshUser);
             setIsAuthenticated(true);
             console.log("[Auth Context] Profile data refreshed from backend:", freshUser);
@@ -112,6 +128,19 @@ export const AuthProvider = ({ children }) => {
       JSON.stringify(userData)
     );
 
+    try {
+      const statsStr = localStorage.getItem("cleverprep_focus_stats");
+      let statsObj = statsStr ? JSON.parse(statsStr) : {};
+      statsObj.currentStreak = userData.currentStreak || 0;
+      statsObj.longestStreak = userData.longestStreak || 0;
+      if (userData.lastStudyDate) {
+        statsObj.lastActiveDate = userData.lastStudyDate;
+      }
+      localStorage.setItem("cleverprep_focus_stats", JSON.stringify(statsObj));
+    } catch (e) {
+      console.error("[Auth Context] Local stats sync failed on login:", e);
+    }
+
     setUser(userData);
 
     setIsAuthenticated(true);
@@ -146,7 +175,37 @@ export const AuthProvider = ({ children }) => {
       JSON.stringify(newUserData)
     );
 
+    try {
+      const statsStr = localStorage.getItem("cleverprep_focus_stats");
+      let statsObj = statsStr ? JSON.parse(statsStr) : {};
+      statsObj.currentStreak = newUserData.currentStreak || 0;
+      statsObj.longestStreak = newUserData.longestStreak || 0;
+      if (newUserData.lastStudyDate) {
+        statsObj.lastActiveDate = newUserData.lastStudyDate;
+      }
+      localStorage.setItem("cleverprep_focus_stats", JSON.stringify(statsObj));
+    } catch (e) {
+      console.error("[Auth Context] Local stats sync failed on updateUser:", e);
+    }
+
     setUser(newUserData);
+  };
+
+  const recordStreak = async () => {
+    try {
+      const todayStr = new Date().toLocaleDateString("en-CA");
+      const res = await recordStudyStreak(todayStr);
+      if (res && res.success && res.data) {
+        updateUser({
+          currentStreak: res.data.currentStreak,
+          longestStreak: res.data.longestStreak,
+          lastStudyDate: res.data.lastStudyDate,
+          totalStudyDays: res.data.totalStudyDays
+        });
+      }
+    } catch (e) {
+      console.warn("[Auth Context] Failed to record study streak:", e);
+    }
   };
 
   // =========================
@@ -160,6 +219,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     checkAuthStatus,
+    recordStreak,
   };
 
   // =========================

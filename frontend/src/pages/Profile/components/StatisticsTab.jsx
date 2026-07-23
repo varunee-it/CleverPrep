@@ -18,7 +18,7 @@ const StatisticsTab = ({ statsData, loading }) => {
   const totalDocuments = overview.totalDocuments || 0;
   const totalFlashcards = overview.totalFlashcards || 0;
   const completedQuizzes = overview.completedQuizzes || 0;
-  const studyStreak = overview.studyStreak || (totalDocuments > 0 ? 1 : 0);
+  const studyStreak = overview.currentStreak || 0;
 
   const hasRecentActivity = 
     (recentActivity.documents && recentActivity.documents.length > 0) || 

@@ -20,7 +20,7 @@ const DocumentCard = ({ document, onDelete }) => {
   const docDescription = document.description || `Interactive learning guide for ${document.title}. Explore flashcards, notes, and AI-tutor workspace.`;
 
   return (
-    <div className="group relative bg-white border border-slate-200/80 hover:border-emerald-300 rounded-[24px] p-5 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(16,185,129,0.06)] hover:-translate-y-1.5 flex flex-col h-full z-0">
+    <div className="group relative bg-white border border-slate-200/80 hover:border-emerald-300 rounded-[24px] p-4 transition-all duration-300 hover:shadow-[0_12px_40px_rgba(16,185,129,0.06)] hover:-translate-y-1.5 flex flex-col h-full z-0">
       
       {/* Click-away backdrop overlay for dropdown menu */}
       {isMenuOpen && (
@@ -34,7 +34,7 @@ const DocumentCard = ({ document, onDelete }) => {
       )}
 
       {/* Top Header Section with Pastel Gradient */}
-      <div className="relative h-32 rounded-[20px] bg-gradient-to-br from-emerald-50/60 via-teal-50/20 to-white border border-slate-100/80 flex items-center justify-center overflow-hidden mb-4 transition-all duration-300 group-hover:from-emerald-50/80 group-hover:via-teal-50/40">
+      <div className="relative h-24 rounded-[20px] bg-gradient-to-br from-emerald-50/60 via-teal-50/20 to-white border border-slate-100/80 flex items-center justify-center overflow-hidden mb-3 transition-all duration-300 group-hover:from-emerald-50/80 group-hover:via-teal-50/40">
         
         {/* PDF Badge */}
         <div className="absolute top-3.5 left-3.5 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 text-[10px] font-bold tracking-wider border border-rose-100/50 uppercase">
@@ -66,8 +66,8 @@ const DocumentCard = ({ document, onDelete }) => {
         )}
 
         {/* PDF Illustration/Icon in the center */}
-        <div className="relative flex items-center justify-center w-16 h-16 rounded-xl bg-white shadow-xs border border-slate-100 group-hover:scale-105 group-hover:shadow-md transition-all duration-300">
-          <FileText className="w-8 h-8 text-emerald-500 transition-colors group-hover:text-emerald-600" strokeWidth={1.5} />
+        <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-white shadow-xs border border-slate-100 group-hover:scale-105 group-hover:shadow-md transition-all duration-300">
+          <FileText className="w-6 h-6 text-emerald-500 transition-colors group-hover:text-emerald-600" strokeWidth={1.5} />
           {document.status === 'processing' && (
             <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-500 border-2 border-white flex items-center justify-center" title="Processing">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
@@ -82,7 +82,7 @@ const DocumentCard = ({ document, onDelete }) => {
       </div>
 
       {/* Middle Section */}
-      <div className="mb-4">
+      <div className="mb-3">
         <h3 className="text-base font-bold text-slate-800 line-clamp-1 break-all group-hover:text-emerald-800 transition-colors mb-0.5" title={document.title}>
           {document.title}
         </h3>
@@ -97,7 +97,7 @@ const DocumentCard = ({ document, onDelete }) => {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-2 border-t border-b border-slate-100 py-3 mb-4 text-center">
+      <div className="grid grid-cols-3 gap-2 border-t border-b border-slate-100 py-2 mb-3 text-center">
         <div>
           <p className="text-sm font-bold text-slate-800">{document.flashcardCount || 0}</p>
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-0.5">Cards</p>
@@ -113,10 +113,10 @@ const DocumentCard = ({ document, onDelete }) => {
       </div>
 
       {/* Bottom Section */}
-      <div className="mt-auto space-y-3">
+      <div className="mt-auto space-y-2">
         <button
           onClick={() => handleNavigate('Content')}
-          className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.99] flex items-center justify-center gap-2 group-hover:bg-emerald-500 group-hover:brightness-105"
+          className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm shadow-emerald-500/10 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-[0.99] flex items-center justify-center gap-2 group-hover:bg-emerald-500 group-hover:brightness-105"
         >
           <Eye className="w-4 h-4" />
           Continue Reading

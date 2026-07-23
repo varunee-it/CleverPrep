@@ -202,7 +202,7 @@ const DashboardPage = () => {
           )}
           
           <div className="flex items-center justify-center md:justify-start gap-3 mt-1.5 text-[10px] font-bold uppercase tracking-wider select-none text-slate-400">
-            <span className="flex items-center gap-1">🔥 {stats.currentStreak || 0}d Streak</span>
+            <span className="flex items-center gap-1">🔥 {user?.currentStreak || 0}d Streak</span>
             <span className="w-1.5 h-1.5 rounded-full bg-slate-200" />
             <span className="flex items-center gap-1">⏱️ {dashboardData.focusMinutesToday || 0}m logged today</span>
           </div>
@@ -327,7 +327,7 @@ const DashboardPage = () => {
               </div>
               <div className={`text-left border-l pl-4 ${cardBorderClass}`}>
                 <span className={`text-[10px] font-bold uppercase tracking-wider block ${cardTitleClass}`}>Current Streak</span>
-                <span className="text-base font-extrabold font-mono text-amber-500 block mt-1">{stats.currentStreak || 0}d</span>
+                <span className="text-base font-extrabold font-mono text-amber-500 block mt-1">{user?.currentStreak || 0}d</span>
               </div>
               <div className={`text-left pt-2 border-t ${cardBorderClass}`}>
                 <span className={`text-[10px] font-bold uppercase tracking-wider block ${cardTitleClass}`}>Documents</span>
@@ -383,10 +383,10 @@ const DashboardPage = () => {
               <span className="text-3xl select-none">🔥</span>
               <div>
                 <h4 className={`text-[13px] font-extrabold leading-tight ${cardContentTextClass}`}>
-                  Consistency Streak: {stats.currentStreak || 0}d
+                  Consistency Streak: {user?.currentStreak || 0}d
                 </h4>
                 <span className={`text-[10px] mt-1 font-semibold leading-relaxed block ${cardMetaTextClass}`}>
-                  Your longest recorded streak is {stats.longestStreak || 0} days. Keep focus rhythms active!
+                  Your longest recorded streak is {user?.longestStreak || 0} days. Keep focus rhythms active!
                 </span>
               </div>
             </div>

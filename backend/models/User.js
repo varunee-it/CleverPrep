@@ -107,6 +107,22 @@ const UserSchema = new mongoose.Schema({
             default: false
         }
     },
+    currentStreak: {
+        type: Number,
+        default: 0
+    },
+    longestStreak: {
+        type: Number,
+        default: 0
+    },
+    lastStudyDate: {
+        type: String,
+        default: null
+    },
+    totalStudyDays: {
+        type: Number,
+        default: 0
+    },
     onboarding: {
         hasCompletedTour: {
             type: Boolean,

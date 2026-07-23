@@ -32,9 +32,11 @@ import Spinner from "../common/Spinner";
 import Modal from "../common/Modal";
 import Flashcard from "./Flashcard";
 import { useTour } from "../../context/TourContext";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 const FlashcardManager = ({ documentId, onTabChange }) => {
     const { evaluateTrigger } = useTour();
+    const { recordStreak } = useAuth();
     console.log("FlashcardManager rendered");
 
     // Core sets & selection states
@@ -252,6 +254,11 @@ const FlashcardManager = ({ documentId, onTabChange }) => {
                 avgResponseTime: avgTime
             });
             console.log("Session analytics saved successfully.");
+            try {
+                await recordStreak();
+            } catch (streakErr) {
+                console.warn("Failed to sync study streak:", streakErr);
+            }
         } catch (error) {
             console.error("Failed to save session analytics", error);
         }

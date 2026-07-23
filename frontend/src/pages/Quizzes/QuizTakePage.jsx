@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 import quizService from '../../services/quizeService.js';
 import PageHeader from '../../components/common/PageHeader.jsx';
@@ -10,6 +11,7 @@ import Button from '../../components/common/Button.jsx';
 import Modal from '../../components/common/Modal.jsx';
 
 const QuizTakePage = () => {
+  const { recordStreak } = useAuth();
   const { quizId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -106,6 +108,11 @@ const QuizTakePage = () => {
 
       await quizService.submitQuiz(quizId, formattedAnswers);
       toast.success('Quiz submitted successfully!');
+      try {
+        await recordStreak();
+      } catch (streakErr) {
+        console.warn("Failed to sync study streak:", streakErr);
+      }
       navigate(`/quizzes/${quizId}/results`);
     } catch (error) {
       toast.error(error.message || 'Failed to submit quiz.');

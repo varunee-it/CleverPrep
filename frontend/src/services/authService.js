@@ -68,13 +68,15 @@ export const register = async (
 // ==========================================
 // Get User Profile
 // ==========================================
-export const getProfile = async () => {
+export const getProfile = async (localDate) => {
 
   try {
 
+    const params = localDate ? { localDate } : {};
     const response =
       await axiosInstance.get(
-        API_PATHS.AUTH.GET_PROFILE
+        API_PATHS.AUTH.GET_PROFILE,
+        { params }
       );
 
     return response.data;
@@ -270,6 +272,15 @@ export const resetOnboarding = async () => {
   }
 };
 
+export const recordStudyStreak = async (localDate) => {
+  try {
+    const response = await axiosInstance.post("/auth/streak/record", { localDate });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: "Failed to record study streak" };
+  }
+};
+
 // ==========================================
 // Export Auth Service
 // ==========================================
@@ -291,6 +302,7 @@ const authService = {
   deleteAccount,
   updateOnboarding,
   resetOnboarding,
+  recordStudyStreak,
 };
 
 export default authService;

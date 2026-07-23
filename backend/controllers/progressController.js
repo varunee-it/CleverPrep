@@ -99,6 +99,19 @@ export const getDashboard = async (req, res, next) => {
       .populate('documentId', 'title')
       .select('title completedAt score');
 
+    // Check decay
+    const localDate = req.query.localDate || req.headers['x-local-date'];
+    if (localDate && req.user.lastStudyDate) {
+      const d1 = new Date(req.user.lastStudyDate);
+      const d2 = new Date(localDate);
+      const diffTime = d2.getTime() - d1.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 1) {
+        req.user.currentStreak = 0;
+        await req.user.save();
+      }
+    }
+
     // =========================
     // Final response
     // =========================
@@ -114,6 +127,10 @@ export const getDashboard = async (req, res, next) => {
           totalQuizzes,
           completedQuizzes,
           averageScore,
+          currentStreak: req.user.currentStreak || 0,
+          longestStreak: req.user.longestStreak || 0,
+          lastStudyDate: req.user.lastStudyDate || null,
+          totalStudyDays: req.user.totalStudyDays || 0
         },
 
         recentActivity: {

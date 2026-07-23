@@ -41,7 +41,7 @@ const Flashcard = React.memo(({ flashcard, onToggleStar, isFlipped, onFlip }) =>
     const diffInfo = getDifficultyInfo();
 
     return (
-        <div 
+        <div
             className="relative w-full h-[440px] sm:h-[480px] perspective-1200 outline-hidden"
             onClick={handleFlip}
             tabIndex={0}
@@ -73,21 +73,20 @@ const Flashcard = React.memo(({ flashcard, onToggleStar, isFlipped, onFlip }) =>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${diffInfo.classes} animate-pulse`}>
                             {diffInfo.label}
                         </span>
-                        
+
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onToggleStar(flashcard._id);
                             }}
-                            className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 outline-hidden ${
-                                flashcard.isStarred
-                                    ? 'bg-amber-100 text-amber-500'
-                                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-amber-500'
-                            }`}
+                            className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 outline-hidden ${flashcard.isStarred
+                                ? 'bg-amber-100 text-amber-500'
+                                : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-amber-500'
+                                }`}
                             aria-label={flashcard.isStarred ? "Remove Bookmark" : "Bookmark Flashcard"}
                         >
                             <Star className="w-5.5 h-5.5" strokeWidth={2} fill={flashcard.isStarred ? 'currentColor' : 'none'} />
-                            
+
                             {sparkleActive && (
                                 <div className="absolute inset-0 pointer-events-none overflow-visible">
                                     {[
@@ -146,21 +145,20 @@ const Flashcard = React.memo(({ flashcard, onToggleStar, isFlipped, onFlip }) =>
                         <span className={`px-3 py-1 rounded-full text-xs font-bold border ${diffInfo.classes}`}>
                             {diffInfo.label}
                         </span>
-                        
+
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 onToggleStar(flashcard._id);
                             }}
-                            className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 outline-hidden ${
-                                flashcard.isStarred
-                                    ? 'bg-amber-100 text-amber-500'
-                                    : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-amber-500'
-                            }`}
+                            className={`relative w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 outline-hidden ${flashcard.isStarred
+                                ? 'bg-amber-100 text-amber-500'
+                                : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-amber-500'
+                                }`}
                             aria-label={flashcard.isStarred ? "Remove Bookmark" : "Bookmark Flashcard"}
                         >
                             <Star className="w-5.5 h-5.5" strokeWidth={2} fill={flashcard.isStarred ? 'currentColor' : 'none'} />
-                            
+
                             {sparkleActive && (
                                 <div className="absolute inset-0 pointer-events-none overflow-visible">
                                     {[
@@ -188,7 +186,7 @@ const Flashcard = React.memo(({ flashcard, onToggleStar, isFlipped, onFlip }) =>
 
                     {/* Scrollable Answer / Explanations / Memory Tips */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar my-4 pr-1">
-                        <div 
+                        <div
                             className={`transition-all duration-500 ease-out transform flex flex-col items-center justify-center min-h-full w-full
                                 ${isFlipped ? 'opacity-100 translate-y-0 scale-100 delay-150' : 'opacity-0 translate-y-4 scale-95'}`}
                         >
@@ -196,13 +194,12 @@ const Flashcard = React.memo(({ flashcard, onToggleStar, isFlipped, onFlip }) =>
                                 ✅ Correct Answer
                             </span>
 
-                            <p 
-                                className={`font-bold text-slate-900 leading-[1.5] mb-6 px-4 font-display w-full max-w-md mx-auto ${
-                                    (flashcard.answer.length > 45 || flashcard.answer.includes("\n")) 
-                                        ? 'text-left' 
-                                        : 'text-center'
-                                }`}
-                                style={{ fontSize: 'clamp(20px, 3.2vw, 28px)' }}
+                            <p
+                                className={`font-bold text-slate-900 leading-[1.5] mb-6 px-4 font-display w-full max-w-md mx-auto ${(flashcard.answer.length > 45 || flashcard.answer.includes("\n"))
+                                    ? 'text-left'
+                                    : 'text-center'
+                                    }`}
+                                style={{ fontSize: 'clamp(18px, 2.2vw, 20px)' }}
                             >
                                 {flashcard.answer}
                             </p>
